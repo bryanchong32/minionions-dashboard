@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minionions Marketing — Boss View</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    /* ===== DESIGN TOKENS ===== */
+    :root {
+      --color-primary: #2563EB;
+      --color-primary-light: #DBEAFE;
+      --color-secondary: #3B82F6;
+      --color-accent: #F97316;
+      --color-accent-light: #FFF7ED;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-text: #1E293B;
+      --color-text-secondary: #64748B;
+      --color-text-muted: #94A3B8;
+      --color-border: #E2E8F0;
+      --color-border-light: #F1F5F9;
+      --color-success: #16A34A;
+      --color-success-light: #DCFCE7;
+      --color-danger: #DC2626;
+      --color-danger-light: #FEE2E2;
+      --color-warning: #D97706;
+      --color-warning-light: #FEF3C7;
+      --color-purple: #7C3AED;
+      --color-purple-light: #EDE9FE;
+      --font-sans: 'Fira Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'Fira Code', 'SF Mono', monospace;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: var(--font-sans);
+      color: var(--color-text);
+      background: var(--color-bg);
+      line-height: 1.6;
+    }
+
+    /* ===== PASSWORD GATE ===== */
+    .gate {
+      position: fixed;
+      inset: 0;
+      background: var(--color-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .gate.hidden { display: none; }
+    .gate__box {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      width: 360px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+    .gate__title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .gate__subtitle {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      margin-bottom: 24px;
+    }
+    .gate__input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .gate__input:focus { border-color: var(--color-primary); }
+    .gate__btn {
+      width: 100%;
+      padding: 10px;
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .gate__btn:hover { background: #1D4ED8; }
+    .gate__error {
+      color: var(--color-danger);
+      font-size: 13px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    /* ===== MAIN LAYOUT ===== */
+    .app { display: none; }
+    .app.visible { display: block; }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header__left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header__brand {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--color-primary);
+    }
+    .header__title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .header__controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header select, .header input[type="number"] {
+      padding: 6px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      background: var(--color-surface);
+      outline: none;
+    }
+    .header select:focus, .header input:focus {
+      border-color: var(--color-primary);
+    }
+    .btn {
+      padding: 6px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      background: var(--color-surface);
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--color-text);
+    }
+    .btn:hover { background: var(--color-border-light); }
+    .btn--primary {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+    }
+    .btn--primary:hover { background: #1D4ED8; }
+    .btn--sm { padding: 4px 10px; font-size: 12px; }
+
+    /* ===== CONFIG BAR ===== */
+    .config {
+      background: var(--color-border-light);
+      border-bottom: 1px solid var(--color-border);
+      padding: 12px 24px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .config.visible { display: flex; }
+    .config label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+    }
+    .config input {
+      padding: 5px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--color-surface);
+      outline: none;
+      flex: 1;
+      min-width: 200px;
+    }
+    .config__status {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+    }
+    .config__status--ok { background: var(--color-success-light); color: var(--color-success); }
+    .config__status--err { background: var(--color-danger-light); color: var(--color-danger); }
+
+    /* ===== CONTENT ===== */
+    .content {
+      padding: 20px 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ===== KPI CARDS ===== */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-group {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .kpi-group__title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-border-light);
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .kpi-grid--3col { grid-template-columns: repeat(3, 1fr); }
+    .kpi-grid--2col { grid-template-columns: repeat(2, 1fr); }
+    .kpi-item {}
+    .kpi-item__label {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .kpi-item__value {
+      font-size: 16px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: var(--color-text);
+      margin-top: 2px;
+    }
+    .kpi-item__value--positive { color: var(--color-success); }
+    .kpi-item__value--negative { color: var(--color-danger); }
+    .kpi-item__value--accent { color: var(--color-accent); }
+
+    /* Target input */
+    .target-input {
+      width: 100px;
+      padding: 4px 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 600;
+      outline: none;
+      text-align: right;
+    }
+    .target-input:focus { border-color: var(--color-primary); }
+
+    /* ===== CHART GRID ===== */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .chart-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .chart-card--full { grid-column: 1 / -1; }
+    .chart-card__title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 12px;
+    }
+    .chart-card__subtitle {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      margin-top: -8px;
+      margin-bottom: 12px;
+    }
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 280px;
+    }
+    .chart-wrap--sm { height: 220px; }
+    .chart-wrap canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ===== LOADING ===== */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--color-text-muted);
+      font-size: 14px;
+    }
+    .loading::after {
+      content: '';
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--color-border);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .kpi-row { grid-template-columns: 1fr; }
+      .chart-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .content { padding: 12px; }
+      .header { padding: 12px 16px; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .chart-wrap { height: 220px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== PASSWORD GATE ===== -->
+<div class="gate" id="gate">
+  <div class="gate__box">
+    <div class="gate__title">Minionions Marketing</div>
+    <div class="gate__subtitle">Boss View Dashboard</div>
+    <input type="password" class="gate__input" id="gatePassword" placeholder="Enter password" autofocus>
+    <button class="gate__btn" id="gateBtn">Enter</button>
+    <div class="gate__error" id="gateError">Incorrect password</div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div class="app" id="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header__left">
+      <div>
+        <div class="header__brand">Minionions Marketing</div>
+        <div class="header__title">Boss View</div>
+      </div>
+    </div>
+    <div class="header__controls">
+      <select id="monthSelect"></select>
+      <button class="btn" id="refreshBtn">Refresh</button>
+      <button class="btn btn--sm" id="configToggle">Config</button>
+    </div>
+  </div>
+
+  <!-- Config Bar -->
+  <div class="config" id="configBar">
+    <label>API URL</label>
+    <input type="text" id="cfgApiUrl" placeholder="https://app.solworks.io">
+    <label>Token</label>
+    <input type="password" id="cfgToken" placeholder="Dashboard service token">
+    <button class="btn btn--sm" id="cfgTest">Test</button>
+    <button class="btn btn--sm btn--primary" id="cfgSave">Save</button>
+    <span class="config__status" id="cfgStatus"></span>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="content">
+    <div class="loading" id="loadingMsg">Loading dashboard data</div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-row" id="kpiRow" style="display:none;">
+      <!-- Lifetime Stats -->
+      <div class="kpi-group">
+        <div class="kpi-group__title">Lifetime Stats</div>
+        <div class="kpi-grid">
+          <div class="kpi-item">
+            <div class="kpi-item__label">Total PV</div>
+            <div class="kpi-item__value" id="ltPv">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Orders</div>
+            <div class="kpi-item__value" id="ltOrders">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Customers</div>
+            <div class="kpi-item__value" id="ltCustomers">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Avg Order</div>
+            <div class="kpi-item__value" id="ltAvgOrder">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Commission</div>
+            <div class="kpi-item__value" id="ltCommission">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Gross Profit</div>
+            <div class="kpi-item__value" id="ltGrossProfit">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Ad Spend</div>
+            <div class="kpi-item__value" id="ltAdSpend">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Net Profit</div>
+            <div class="kpi-item__value" id="ltNetProfit">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly Stats -->
+      <div class="kpi-group">
+        <div class="kpi-group__title">Monthly Stats (<span id="monthLabel"></span>)</div>
+        <div class="kpi-grid">
+          <div class="kpi-item">
+            <div class="kpi-item__label">Total PV</div>
+            <div class="kpi-item__value" id="moPv">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Orders</div>
+            <div class="kpi-item__value" id="moOrders">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Customers</div>
+            <div class="kpi-item__value" id="moCustomers">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Avg Order</div>
+            <div class="kpi-item__value" id="moAvgOrder">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Commission</div>
+            <div class="kpi-item__value" id="moCommission">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Ad Spend</div>
+            <div class="kpi-item__value" id="moAdSpend">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Net Profit</div>
+            <div class="kpi-item__value" id="moNetProfit">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Run Rate</div>
+            <div class="kpi-item__value kpi-item__value--accent" id="moRunRate">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Target Tracker -->
+      <div class="kpi-group">
+        <div class="kpi-group__title">Target Tracker</div>
+        <div class="kpi-grid kpi-grid--2col">
+          <div class="kpi-item">
+            <div class="kpi-item__label">Monthly Target</div>
+            <div style="margin-top:2px;">
+              <input type="number" class="target-input" id="targetInput" placeholder="Set target">
+              <button class="btn btn--sm btn--primary" id="targetSave" style="margin-left:4px;">Set</button>
+            </div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Daily Target</div>
+            <div class="kpi-item__value" id="tgDaily">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">Progress</div>
+            <div class="kpi-item__value" id="tgProgress">—</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-item__label">PV/Day Needed</div>
+            <div class="kpi-item__value" id="tgPvNeeded">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Grid -->
+    <div class="chart-grid" id="chartGrid" style="display:none;">
+      <!-- 1. Monthly Sales Trend -->
+      <div class="chart-card">
+        <div class="chart-card__title">Monthly Sales Trend</div>
+        <div class="chart-wrap"><canvas id="chartMonthlySales"></canvas></div>
+      </div>
+
+      <!-- 7. Monthly Sales Target -->
+      <div class="chart-card">
+        <div class="chart-card__title">Monthly Sales Target</div>
+        <div class="chart-wrap"><canvas id="chartMonthlyTarget"></canvas></div>
+      </div>
+
+      <!-- 2. Daily Sales Trend (all orders) -->
+      <div class="chart-card chart-card--full">
+        <div class="chart-card__title">Daily Sales Trend (All Orders)</div>
+        <div class="chart-card__subtitle">PV by delivery status</div>
+        <div class="chart-wrap"><canvas id="chartDailyAll"></canvas></div>
+      </div>
+
+      <!-- 10. Daily Sales Trend (new) -->
+      <div class="chart-card">
+        <div class="chart-card__title">Daily Sales Trend (New Customers)</div>
+        <div class="chart-wrap"><canvas id="chartDailyNew"></canvas></div>
+      </div>
+
+      <!-- 11. Daily Sales Trend (repeat) -->
+      <div class="chart-card">
+        <div class="chart-card__title">Daily Sales Trend (Repeat Customers)</div>
+        <div class="chart-wrap"><canvas id="chartDailyRepeat"></canvas></div>
+      </div>
+
+      <!-- 9. New / Repeat Customers -->
+      <div class="chart-card">
+        <div class="chart-card__title">New / Repeat Customers</div>
+        <div class="chart-wrap chart-wrap--sm"><canvas id="chartCustomerMix"></canvas></div>
+      </div>
+
+      <!-- 8. Weekly Sales Target -->
+      <div class="chart-card">
+        <div class="chart-card__title">Weekly Sales Target</div>
+        <div class="chart-wrap chart-wrap--sm"><canvas id="chartWeeklyTarget"></canvas></div>
+      </div>
+
+      <!-- 4. PV and Gross Profit -->
+      <div class="chart-card">
+        <div class="chart-card__title">PV and Gross Profit (MYR)</div>
+        <div class="chart-wrap"><canvas id="chartPvGp"></canvas></div>
+      </div>
+
+      <!-- 5. Monthly Revenue and Cost -->
+      <div class="chart-card">
+        <div class="chart-card__title">Monthly Revenue and Cost</div>
+        <div class="chart-wrap"><canvas id="chartRevCost"></canvas></div>
+      </div>
+
+      <!-- 6. Monthly Net Profit -->
+      <div class="chart-card">
+        <div class="chart-card__title">Monthly Net Profit</div>
+        <div class="chart-wrap"><canvas id="chartNetProfit"></canvas></div>
+      </div>
+
+      <!-- 3. Daily Ad Spend Trend -->
+      <div class="chart-card">
+        <div class="chart-card__title">Daily Ad Spend Trend</div>
+        <div class="chart-wrap"><canvas id="chartAdDaily"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== CONFIGURATION =====
+const PASSWORD = 'Rich123.';
+const DEFAULT_API_URL = 'https://app.solworks.io';
+
+// ===== STATE =====
+let apiUrl = '';
+let apiToken = '';
+let selectedMonth = '';
+let charts = {};
+
+// ===== HELPERS =====
+function fmt(n, decimals = 0) {
+  if (n == null || isNaN(n)) return '—';
+  return Number(n).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+function fmtPct(n) {
+  if (n == null || isNaN(n)) return '—';
+  return Number(n).toFixed(1) + '%';
+}
+function shortMonth(ym) {
+  const [y, m] = ym.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[parseInt(m, 10) - 1] + ' ' + y;
+}
+function setKpi(id, value, colorClass) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = value;
+  el.className = 'kpi-item__value';
+  if (colorClass) el.classList.add(colorClass);
+}
+
+async function api(endpoint, options = {}) {
+  const url = `${apiUrl}/api/boss-view${endpoint}`;
+  const headers = { 'Authorization': `Bearer ${apiToken}`, 'Content-Type': 'application/json' };
+  const res = await fetch(url, { ...options, headers });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `API error ${res.status}`);
+  }
+  return res.json();
+}
+
+// ===== PASSWORD GATE =====
+function initGate() {
+  if (localStorage.getItem('momAuth') === 'true') {
+    showApp();
+    return;
+  }
+  document.getElementById('gate').classList.remove('hidden');
+
+  const passwordInput = document.getElementById('gatePassword');
+  const gateBtn = document.getElementById('gateBtn');
+  const gateError = document.getElementById('gateError');
+
+  function tryLogin() {
+    if (passwordInput.value === PASSWORD) {
+      localStorage.setItem('momAuth', 'true');
+      showApp();
+    } else {
+      gateError.style.display = 'block';
+      passwordInput.value = '';
+      passwordInput.focus();
+    }
+  }
+
+  gateBtn.addEventListener('click', tryLogin);
+  passwordInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') tryLogin();
+  });
+}
+
+function showApp() {
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+  initApp();
+}
+
+// ===== APP INIT =====
+function initApp() {
+  // Load config
+  apiUrl = localStorage.getItem('momApiUrl') || DEFAULT_API_URL;
+  apiToken = localStorage.getItem('momApiToken') || '';
+
+  document.getElementById('cfgApiUrl').value = apiUrl;
+  document.getElementById('cfgToken').value = apiToken;
+
+  // Config bar toggle
+  document.getElementById('configToggle').addEventListener('click', () => {
+    document.getElementById('configBar').classList.toggle('visible');
+  });
+
+  // Config save
+  document.getElementById('cfgSave').addEventListener('click', () => {
+    apiUrl = document.getElementById('cfgApiUrl').value.replace(/\/+$/, '');
+    apiToken = document.getElementById('cfgToken').value;
+    localStorage.setItem('momApiUrl', apiUrl);
+    localStorage.setItem('momApiToken', apiToken);
+    showConfigStatus('Saved', true);
+  });
+
+  // Config test
+  document.getElementById('cfgTest').addEventListener('click', async () => {
+    apiUrl = document.getElementById('cfgApiUrl').value.replace(/\/+$/, '');
+    apiToken = document.getElementById('cfgToken').value;
+    try {
+      await api('/kpi?month=' + selectedMonth);
+      showConfigStatus('Connected', true);
+    } catch (e) {
+      showConfigStatus(e.message, false);
+    }
+  });
+
+  // Month selector
+  populateMonthSelector();
+
+  // Refresh
+  document.getElementById('refreshBtn').addEventListener('click', loadDashboard);
+
+  // Month change
+  document.getElementById('monthSelect').addEventListener('change', (e) => {
+    selectedMonth = e.target.value;
+    loadDashboard();
+  });
+
+  // Target save
+  document.getElementById('targetSave').addEventListener('click', saveTarget);
+
+  // If no token, show config
+  if (!apiToken) {
+    document.getElementById('configBar').classList.add('visible');
+    document.getElementById('loadingMsg').textContent = 'Configure API connection above to get started';
+    return;
+  }
+
+  loadDashboard();
+}
+
+function showConfigStatus(msg, ok) {
+  const el = document.getElementById('cfgStatus');
+  el.textContent = msg;
+  el.className = 'config__status ' + (ok ? 'config__status--ok' : 'config__status--err');
+  setTimeout(() => { el.textContent = ''; el.className = 'config__status'; }, 3000);
+}
+
+function populateMonthSelector() {
+  const select = document.getElementById('monthSelect');
+  const now = new Date();
+  const options = [];
+  for (let i = 0; i < 24; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    options.push(`<option value="${ym}">${shortMonth(ym)}</option>`);
+  }
+  select.innerHTML = options.join('');
+  selectedMonth = select.value;
+}
+
+// ===== LOAD DASHBOARD =====
+async function loadDashboard() {
+  document.getElementById('loadingMsg').style.display = 'block';
+  document.getElementById('kpiRow').style.display = 'none';
+  document.getElementById('chartGrid').style.display = 'none';
+
+  try {
+    const [kpi, trend, daily, adDaily, weekly, mix] = await Promise.all([
+      api(`/kpi?month=${selectedMonth}`),
+      api(`/monthly-trend?months=13`),
+      api(`/daily?month=${selectedMonth}`),
+      api(`/ad-daily?month=${selectedMonth}`),
+      api(`/weekly-target?month=${selectedMonth}`),
+      api(`/customer-mix?month=${selectedMonth}`),
+    ]);
+
+    renderKpi(kpi);
+    renderCharts(trend, daily, adDaily, weekly, mix);
+
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('kpiRow').style.display = '';
+    document.getElementById('chartGrid').style.display = '';
+  } catch (e) {
+    document.getElementById('loadingMsg').textContent = 'Error: ' + e.message;
+    console.error('Dashboard load error:', e);
+  }
+}
+
+// ===== RENDER KPI =====
+function renderKpi(data) {
+  const { lifetime: lt, monthly: mo, target: tg } = data;
+
+  document.getElementById('monthLabel').textContent = shortMonth(selectedMonth);
+
+  // Lifetime
+  setKpi('ltPv', fmt(lt.total_pv));
+  setKpi('ltOrders', fmt(lt.total_orders));
+  setKpi('ltCustomers', fmt(lt.total_customers));
+  setKpi('ltAvgOrder', fmt(lt.avg_order_size));
+  setKpi('ltCommission', fmt(lt.commission));
+  setKpi('ltGrossProfit', fmt(lt.gross_profit));
+  setKpi('ltAdSpend', fmt(lt.total_ad_spend));
+  setKpi('ltNetProfit', fmt(lt.net_profit), lt.net_profit >= 0 ? 'kpi-item__value--positive' : 'kpi-item__value--negative');
+
+  // Monthly
+  setKpi('moPv', fmt(mo.total_pv));
+  setKpi('moOrders', fmt(mo.total_orders));
+  setKpi('moCustomers', fmt(mo.total_customers));
+  setKpi('moAvgOrder', fmt(mo.avg_order_size));
+  setKpi('moCommission', fmt(mo.commission));
+  setKpi('moAdSpend', fmt(mo.ad_spend));
+  setKpi('moNetProfit', fmt(mo.net_profit), mo.net_profit >= 0 ? 'kpi-item__value--positive' : 'kpi-item__value--negative');
+  setKpi('moRunRate', fmt(mo.run_rate));
+
+  // Target
+  if (tg) {
+    document.getElementById('targetInput').value = tg.monthly_target;
+    setKpi('tgDaily', fmt(tg.daily_target));
+    setKpi('tgProgress', fmtPct(tg.progress_pct));
+    setKpi('tgPvNeeded', fmt(tg.pv_per_day_needed), 'kpi-item__value--accent');
+  } else {
+    document.getElementById('targetInput').value = '';
+    setKpi('tgDaily', '—');
+    setKpi('tgProgress', '—');
+    setKpi('tgPvNeeded', '—');
+  }
+}
+
+async function saveTarget() {
+  const value = parseFloat(document.getElementById('targetInput').value);
+  if (!value || value <= 0) return;
+
+  try {
+    await api('/target', {
+      method: 'PUT',
+      body: JSON.stringify({ year_month: selectedMonth, target_pv: value }),
+    });
+    loadDashboard();
+  } catch (e) {
+    alert('Failed to save target: ' + e.message);
+  }
+}
+
+// ===== CHART RENDERING =====
+const COLORS = {
+  blue: '#2563EB',
+  blueLight: 'rgba(37,99,235,0.15)',
+  orange: '#F97316',
+  orangeLight: 'rgba(249,115,22,0.15)',
+  green: '#16A34A',
+  greenLight: 'rgba(22,163,74,0.15)',
+  red: '#DC2626',
+  redLight: 'rgba(220,38,38,0.15)',
+  purple: '#7C3AED',
+  purpleLight: 'rgba(124,58,237,0.15)',
+  gray: '#94A3B8',
+  grayLight: 'rgba(148,163,184,0.15)',
+  yellow: '#D97706',
+  yellowLight: 'rgba(217,119,6,0.15)',
+  teal: '#0D9488',
+};
+
+const CHART_DEFAULTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { size: 11, family: "'Fira Sans'" } } },
+    tooltip: { titleFont: { family: "'Fira Sans'" }, bodyFont: { family: "'Fira Code'", size: 12 } },
+  },
+  scales: {
+    x: { grid: { display: false }, ticks: { font: { size: 10, family: "'Fira Sans'" } } },
+    y: { grid: { color: '#F1F5F9' }, ticks: { font: { size: 10, family: "'Fira Code'" } }, beginAtZero: true },
+  },
+};
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function createChart(canvasId, config) {
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  charts[canvasId] = new Chart(ctx, config);
+  return charts[canvasId];
+}
+
+function renderCharts(trend, daily, adDaily, weekly, mix) {
+  renderMonthlySales(trend);
+  renderMonthlyTarget(trend);
+  renderDailyAll(daily);
+  renderDailyNew(daily);
+  renderDailyRepeat(daily);
+  renderCustomerMix(mix);
+  renderWeeklyTarget(weekly);
+  renderPvGp(trend);
+  renderRevCost(trend);
+  renderNetProfit(trend);
+  renderAdDaily(adDaily);
+}
+
+// Chart 1: Monthly Sales Trend
+function renderMonthlySales(trend) {
+  const labels = trend.months.map(m => shortMonth(m.month));
+  const pvData = trend.months.map(m => m.total_pv);
+
+  createChart('chartMonthlySales', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'PV',
+        data: pvData,
+        backgroundColor: COLORS.blue,
+        borderRadius: 4,
+      }],
+    },
+    options: { ...CHART_DEFAULTS },
+  });
+}
+
+// Chart 7: Monthly Sales Target
+function renderMonthlyTarget(trend) {
+  const labels = trend.months.map(m => shortMonth(m.month));
+  const actualData = trend.months.map(m => m.total_pv);
+  const remainingData = trend.months.map(m => {
+    if (!m.target_pv) return 0;
+    const remaining = m.target_pv - m.total_pv;
+    return remaining > 0 ? remaining : 0;
+  });
+
+  createChart('chartMonthlyTarget', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Actual PV', data: actualData, backgroundColor: COLORS.blue, borderRadius: 4 },
+        { label: 'Remaining', data: remainingData, backgroundColor: COLORS.grayLight, borderRadius: 4 },
+      ],
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      scales: {
+        ...CHART_DEFAULTS.scales,
+        x: { ...CHART_DEFAULTS.scales.x, stacked: true },
+        y: { ...CHART_DEFAULTS.scales.y, stacked: true },
+      },
+    },
+  });
+}
+
+// Chart 2: Daily Sales Trend (all orders)
+function renderDailyAll(daily) {
+  const days = daily.days.filter(d => {
+    return d.delivered_pv > 0 || d.cancelled_pv > 0 || d.pending_pv > 0;
+  });
+  // Show all days up to the last day with data, or all days if current month
+  const allDays = daily.days;
+  const labels = allDays.map(d => parseInt(d.date.split('-')[2], 10));
+
+  createChart('chartDailyAll', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Delivered', data: allDays.map(d => d.delivered_pv), backgroundColor: COLORS.green, borderRadius: 2 },
+        { label: 'Cancelled', data: allDays.map(d => d.cancelled_pv), backgroundColor: COLORS.red, borderRadius: 2 },
+        { label: 'Pending', data: allDays.map(d => d.pending_pv), backgroundColor: COLORS.yellow, borderRadius: 2 },
+      ],
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      scales: {
+        ...CHART_DEFAULTS.scales,
+        x: { ...CHART_DEFAULTS.scales.x, stacked: true },
+        y: { ...CHART_DEFAULTS.scales.y, stacked: true },
+      },
+    },
+  });
+}
+
+// Chart 10: Daily Sales Trend (new)
+function renderDailyNew(daily) {
+  const allDays = daily.days;
+  const labels = allDays.map(d => parseInt(d.date.split('-')[2], 10));
+
+  createChart('chartDailyNew', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Delivered', data: allDays.map(d => d.new_delivered_pv), backgroundColor: COLORS.blue, borderRadius: 2 },
+        { label: 'Cancelled', data: allDays.map(d => d.new_cancelled_pv), backgroundColor: COLORS.red, borderRadius: 2 },
+        { label: 'Pending', data: allDays.map(d => d.new_pending_pv), backgroundColor: COLORS.yellow, borderRadius: 2 },
+      ],
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      scales: {
+        ...CHART_DEFAULTS.scales,
+        x: { ...CHART_DEFAULTS.scales.x, stacked: true },
+        y: { ...CHART_DEFAULTS.scales.y, stacked: true },
+      },
+    },
+  });
+}
+
+// Chart 11: Daily Sales Trend (repeat)
+function renderDailyRepeat(daily) {
+  const allDays = daily.days;
+  const labels = allDays.map(d => parseInt(d.date.split('-')[2], 10));
+
+  createChart('chartDailyRepeat', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Delivered', data: allDays.map(d => d.repeat_delivered_pv), backgroundColor: COLORS.purple, borderRadius: 2 },
+        { label: 'Cancelled', data: allDays.map(d => d.repeat_cancelled_pv), backgroundColor: COLORS.red, borderRadius: 2 },
+        { label: 'Pending', data: allDays.map(d => d.repeat_pending_pv), backgroundColor: COLORS.yellow, borderRadius: 2 },
+      ],
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      scales: {
+        ...CHART_DEFAULTS.scales,
+        x: { ...CHART_DEFAULTS.scales.x, stacked: true },
+        y: { ...CHART_DEFAULTS.scales.y, stacked: true },
+      },
+    },
+  });
+}
+
+// Chart 9: New / Repeat Customers (Doughnut)
+function renderCustomerMix(mix) {
+  createChart('chartCustomerMix', {
+    type: 'doughnut',
+    data: {
+      labels: ['New Customers', 'Repeat Customers'],
+      datasets: [{
+        data: [mix.new_pv, mix.repeat_pv],
+        backgroundColor: [COLORS.blue, COLORS.orange],
+        borderWidth: 0,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { size: 11, family: "'Fira Sans'" } } },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+              return `${ctx.label}: ${fmt(ctx.raw)} PV (${pct}%)`;
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+// Chart 8: Weekly Sales Target
+function renderWeeklyTarget(weekly) {
+  const labels = weekly.weeks.map(w => w.week_label);
+  const actualData = weekly.weeks.map(w => w.actual_pv);
+  const targetPv = weekly.target_pv || 0;
+  const weeklyTarget = weekly.weeks.length > 0 ? targetPv / weekly.weeks.length : 0;
+  const remainingData = weekly.weeks.map(w => {
+    const rem = weeklyTarget - w.actual_pv;
+    return rem > 0 ? rem : 0;
+  });
+
+  createChart('chartWeeklyTarget', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Actual PV', data: actualData, backgroundColor: COLORS.blue, borderRadius: 4 },
+        { label: 'Remaining', data: remainingData, backgroundColor: COLORS.grayLight, borderRadius: 4 },
+      ],
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      scales: {
+        ...CHART_DEFAULTS.scales,
+        x: { ...CHART_DEFAULTS.scales.x, stacked: true },
+        y: { ...CHART_DEFAULTS.scales.y, stacked: true },
+      },
+    },
+  });
+}
+
+// Chart 4: PV and Gross Profit
+function renderPvGp(trend) {
+  const labels = trend.months.map(m => shortMonth(m.month));
+
+  createChart('chartPvGp', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'PV', data: trend.months.map(m => m.total_pv), backgroundColor: COLORS.blue, borderRadius: 4 },
+        { label: 'Gross Profit', data: trend.months.map(m => m.commission), backgroundColor: COLORS.green, borderRadius: 4 },
+      ],
+    },
+    options: CHART_DEFAULTS,
+  });
+}
+
+// Chart 5: Monthly Revenue and Cost
+function renderRevCost(trend) {
+  const labels = trend.months.map(m => shortMonth(m.month));
+
+  createChart('chartRevCost', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Commission (Revenue)', data: trend.months.map(m => m.commission), backgroundColor: COLORS.green, borderRadius: 4 },
+        { label: 'Ad Spend (Cost)', data: trend.months.map(m => m.ad_spend), backgroundColor: COLORS.orange, borderRadius: 4 },
+      ],
+    },
+    options: CHART_DEFAULTS,
+  });
+}
+
+// Chart 6: Monthly Net Profit
+function renderNetProfit(trend) {
+  const labels = trend.months.map(m => shortMonth(m.month));
+  const profitData = trend.months.map(m => m.net_profit);
+  const bgColors = profitData.map(v => v >= 0 ? COLORS.green : COLORS.red);
+
+  createChart('chartNetProfit', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Net Profit',
+        data: profitData,
+        backgroundColor: bgColors,
+        borderRadius: 4,
+      }],
+    },
+    options: CHART_DEFAULTS,
+  });
+}
+
+// Chart 3: Daily Ad Spend Trend
+function renderAdDaily(adDaily) {
+  if (!adDaily.days || adDaily.days.length === 0) {
+    destroyChart('chartAdDaily');
+    return;
+  }
+
+  const labels = adDaily.days.map(d => parseInt(d.date.split('-')[2], 10));
+
+  createChart('chartAdDaily', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Ad Spend (RM)',
+          data: adDaily.days.map(d => d.spend),
+          borderColor: COLORS.orange,
+          backgroundColor: COLORS.orangeLight,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 2,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Enquiries',
+          data: adDaily.days.map(d => d.enquiries),
+          borderColor: COLORS.blue,
+          backgroundColor: 'transparent',
+          borderDash: [4, 4],
+          tension: 0.3,
+          pointRadius: 2,
+          yAxisID: 'y1',
+        },
+      ],
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      scales: {
+        x: { ...CHART_DEFAULTS.scales.x },
+        y: {
+          ...CHART_DEFAULTS.scales.y,
+          position: 'left',
+          title: { display: true, text: 'Spend (RM)', font: { size: 10, family: "'Fira Sans'" } },
+        },
+        y1: {
+          position: 'right',
+          grid: { display: false },
+          ticks: { font: { size: 10, family: "'Fira Code'" } },
+          title: { display: true, text: 'Enquiries', font: { size: 10, family: "'Fira Sans'" } },
+          beginAtZero: true,
+        },
+      },
+    },
+  });
+}
+
+// ===== BOOT =====
+document.addEventListener('DOMContentLoaded', initGate);
+</script>
+</body>
+</html>
