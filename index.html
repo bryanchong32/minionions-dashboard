@@ -2487,7 +2487,7 @@ function bindCampaignToggle(container) {
   });
 }
 
-function renderAdsOverviewKpis(allCampaigns, daysInRange) {
+function renderAdsOverviewKpis(allCampaigns, daysInRange, allAds) {
   let totalSpend = 0, totalMsgs = 0, cprSum = 0, cprCount = 0;
   let freqSum = 0, freqCount = 0, ctrSum = 0, ctrCount = 0;
   let campaignCount = 0;
@@ -2495,13 +2495,18 @@ function renderAdsOverviewKpis(allCampaigns, daysInRange) {
   allCampaigns.forEach(c => {
     campaignCount++;
     totalSpend += parseFloat(c.spend) || 0;
-    totalMsgs += getCampaignMessages(c);
-    const cpr = getCampaignCpr(c);
-    if (cpr != null) { cprSum += cpr; cprCount++; }
     const f = parseFloat(c.frequency);
     if (!isNaN(f)) { freqSum += f; freqCount++; }
     const ct = parseFloat(c.ctr);
     if (!isNaN(ct)) { ctrSum += ct; ctrCount++; }
+  });
+
+  // Aggregate messages + CPR from ad-level data (campaign-insights doesn't have message counts)
+  (allAds || []).forEach(ad => {
+    const msgs = getAdMessages(ad);
+    totalMsgs += msgs;
+    const cpr = getAdCpr(ad);
+    if (cpr != null && msgs > 0) { cprSum += cpr; cprCount++; }
   });
 
   const avgCpr = cprCount > 0 ? cprSum / cprCount : null;
@@ -2585,8 +2590,8 @@ async function loadAdsTab() {
     const isCurrentMonth = now.getFullYear() === y && (now.getMonth() + 1) === m;
     const daysElapsed = isCurrentMonth ? now.getDate() : daysInMonth;
 
-    // Render overview KPIs
-    renderAdsOverviewKpis(allCampaigns, daysElapsed);
+    // Render overview KPIs (pass allAds for message/CPR aggregation since campaign-insights lacks these)
+    renderAdsOverviewKpis(allCampaigns, daysElapsed, allAds);
 
     // Update cache note
     const cacheNote = document.getElementById('adsCacheNote');
