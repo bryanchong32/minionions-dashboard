@@ -2110,25 +2110,32 @@ function renderThumb(ad) {
 }
 
 function getAdMessages(ad) {
-  if (!ad.actions) return 0;
-  return ad.actions.messaging_first_reply || ad.actions.onsite_conversion_messaging_first_reply || 0;
+  // API returns flat fields: first_replies, new_leads, conversations_started
+  return parseInt(ad.first_replies, 10) || parseInt(ad.new_leads, 10) || parseInt(ad.conversations_started, 10) || 0;
 }
 
 function getAdCpr(ad) {
-  if (!ad.cost_per_action) return null;
-  const cpr = ad.cost_per_action.messaging_first_reply || ad.cost_per_action.onsite_conversion_messaging_first_reply;
-  return cpr ? parseFloat(cpr) : null;
+  const cpr = parseFloat(ad.cost_per_result);
+  return cpr && !isNaN(cpr) ? cpr : null;
 }
 
 function getCampaignMessages(c) {
-  if (!c.actions) return 0;
-  return c.actions.messaging_first_reply || c.actions.onsite_conversion_messaging_first_reply || 0;
+  // Campaign insights uses actions object
+  if (c.first_replies) return parseInt(c.first_replies, 10) || 0;
+  if (c.actions) return c.actions.messaging_first_reply || c.actions.onsite_conversion_messaging_first_reply || 0;
+  return 0;
 }
 
 function getCampaignCpr(c) {
-  if (!c.cost_per_action) return null;
-  const cpr = c.cost_per_action.messaging_first_reply || c.cost_per_action.onsite_conversion_messaging_first_reply;
-  return cpr ? parseFloat(cpr) : null;
+  if (c.cost_per_result) return parseFloat(c.cost_per_result) || null;
+  if (c.cost_per_action) {
+    const cpr = c.cost_per_action.messaging_first_reply || c.cost_per_action.onsite_conversion_messaging_first_reply;
+    return cpr ? parseFloat(cpr) : null;
+  }
+  // Derive from spend / messages
+  const msgs = getCampaignMessages(c);
+  const spend = parseFloat(c.spend) || 0;
+  return msgs > 0 ? Math.round((spend / msgs) * 100) / 100 : null;
 }
 
 function groupAdsByCampaign(ads) {
@@ -2148,7 +2155,7 @@ function renderAdRow(ad, campaignTotalSpend, showSpendBar) {
   const cpr = getAdCpr(ad);
   const freq = parseFloat(ad.frequency) || 0;
   const ctr = ad.ctr ? parseFloat(ad.ctr) : null;
-  const linkCtr = ad.inline_link_click_ctr ? parseFloat(ad.inline_link_click_ctr) : null;
+  const linkCtr = (ad.ctr_link || ad.inline_link_click_ctr) ? parseFloat(ad.ctr_link || ad.inline_link_click_ctr) : null;
   const impressions = parseInt(ad.impressions) || 0;
   const reach = parseInt(ad.reach) || 0;
   const verdict = getVerdict(cpr, spend);
@@ -2187,14 +2194,12 @@ function renderPeAdRow(ad) {
   const spend = parseFloat(ad.spend) || 0;
   const freq = parseFloat(ad.frequency) || 0;
   const ctr = ad.ctr ? parseFloat(ad.ctr) : null;
-  const linkCtr = ad.inline_link_click_ctr ? parseFloat(ad.inline_link_click_ctr) : null;
+  const linkCtr = (ad.ctr_link || ad.inline_link_click_ctr) ? parseFloat(ad.ctr_link || ad.inline_link_click_ctr) : null;
   const impressions = parseInt(ad.impressions) || 0;
   const reach = parseInt(ad.reach) || 0;
-  const convStarted = ad.actions ? (ad.actions.onsite_conversion_messaging_first_reply || ad.actions.messaging_first_reply || 0) : 0;
-  const comments = ad.actions ? (ad.actions.comment || 0) : 0;
-  const thruplay = ad.video_thruplay_actions || 0;
-  const views3s = ad.video_3s_views || 0;
-  const thruplayPct = views3s > 0 ? ((thruplay / views3s) * 100) : null;
+  const convStarted = parseInt(ad.conversations_started, 10) || parseInt(ad.first_replies, 10) || 0;
+  const comments = parseInt(ad.comments, 10) || 0;
+  const thruplayPct = ad.thruplay_pct ? parseFloat(ad.thruplay_pct) : null;
 
   return `<div class="ad-row ad-row--pe">
     ${renderThumb(ad)}
@@ -2445,8 +2450,8 @@ function renderBrandingSection(brandCampaigns, adsByGroup) {
     const ctr = c.ctr ? parseFloat(c.ctr) : null;
     const campaignAds = adsByGroup[c.campaign_id] ? adsByGroup[c.campaign_id].ads : [];
     const adCount = campaignAds.length;
-    const engagement = c.actions ? (c.actions.post_engagement || c.actions.page_engagement || 0) : 0;
-    const convStarted = c.actions ? (c.actions.onsite_conversion_messaging_first_reply || c.actions.messaging_first_reply || 0) : 0;
+    const engagement = parseInt(c.post_engagement, 10) || (c.actions ? (c.actions.post_engagement || c.actions.page_engagement || 0) : 0);
+    const convStarted = parseInt(c.conversations_started, 10) || parseInt(c.first_replies, 10) || (c.actions ? (c.actions.messaging_first_reply || 0) : 0);
 
     html += `<div class="campaign-row">
       <div class="campaign-header">
@@ -2535,20 +2540,22 @@ async function loadAdsTab() {
     // Fetch campaign + ad level data in parallel
     const [campaignData, msgAds, peAds] = await Promise.all([
       apiSafe(`/meta/campaign-insights?month=${selectedMonth}`),
-      apiSafe(`/meta/ad-insights?month=${selectedMonth}&objective=MESSAGES`),
+      apiSafe(`/meta/ad-insights?month=${selectedMonth}&objective=REPLIES`),
       apiSafe(`/meta/ad-insights?month=${selectedMonth}&objective=POST_ENGAGEMENT`),
     ]);
 
     // Combine all campaigns from all objectives
     let allCampaigns = [];
-    if (campaignData) {
-      Object.values(campaignData).forEach(obj => {
+    if (campaignData && campaignData.groups) {
+      Object.values(campaignData.groups).forEach(obj => {
         if (obj && obj.campaigns) allCampaigns = allCampaigns.concat(obj.campaigns);
       });
     }
 
-    // Combine all ads
-    const allAds = [].concat(msgAds || [], peAds || []);
+    // Combine all ads — unwrap from { ads: [...] } response shape
+    const msgAdsList = (msgAds && msgAds.ads) ? msgAds.ads : (Array.isArray(msgAds) ? msgAds : []);
+    const peAdsList = (peAds && peAds.ads) ? peAds.ads : (Array.isArray(peAds) ? peAds : []);
+    const allAds = [].concat(msgAdsList, peAdsList);
 
     // Group ads by campaign
     const adsByGroup = groupAdsByCampaign(allAds);
