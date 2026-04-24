@@ -165,6 +165,204 @@
 
     .error-msg { text-align: center; padding: 40px; color: var(--red); font-size: 14px; }
 
+    /* ===== FLOW PIPELINE ===== */
+    .flow {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+    }
+    .flow-stage {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      padding: 16px 14px 14px;
+      position: relative;
+      min-width: 0;
+    }
+    .flow-stage.danger {
+      border-color: var(--red);
+      background: var(--red-bg);
+    }
+    .flow-stage.danger .stage-count { color: var(--red); }
+    .flow-stage.danger .progress-fill { background: var(--red); }
+    .flow-stage.danger .stage-pct { color: var(--red); font-weight: 700; }
+    .flow-stage.warning {
+      border-color: var(--orange);
+      background: var(--orange-bg);
+    }
+    .flow-stage.warning .stage-count { color: var(--orange); }
+    .flow-stage.warning .progress-fill { background: var(--orange); }
+    .flow-stage.warning .stage-pct { color: var(--orange); font-weight: 700; }
+    .flow-stage.good .stage-pct { color: var(--green); }
+    .flow-stage.good .progress-fill { background: var(--green); }
+    .flow-stage.graduated {
+      background: var(--green-bg);
+      border-color: #BBF7D0;
+    }
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      padding: 0 2px;
+      flex-shrink: 0;
+    }
+    .flow-arrow svg {
+      width: 20px;
+      height: 20px;
+      color: var(--border);
+    }
+    .stage-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 1px;
+    }
+    .stage-count {
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text);
+    }
+    .stage-pct {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-3);
+    }
+    .stage-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: var(--border-light);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--accent);
+      transition: width 0.4s ease;
+    }
+    .progress-legend {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      font-size: 9px;
+      color: var(--text-3);
+      font-family: var(--mono);
+    }
+    .top-split {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 12px;
+    }
+    .track-card {
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .track-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+    .track-body { padding: 12px; }
+    .product-row {
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .product-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .product-name {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .product-badge {
+      width: 24px; height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      color: white;
+    }
+    .product-total {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-3);
+    }
+    .product-body { padding: 12px; }
+    .reorder-wrap {
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .reorder-body { padding: 12px; }
+    .reorder-products {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .reorder-chip {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--border-light);
+      color: var(--text-2);
+    }
+    .funnel-rate {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+    .funnel-rate-label {
+      font-size: 9px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .rotation-toggle {
+      display: inline-block;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent);
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: var(--font);
+    }
+    .rotation-toggle:hover { text-decoration: underline; }
+
     /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
       .kpi-row--5, .kpi-row--4, .kpi-row--3 { grid-template-columns: repeat(2, 1fr); }
@@ -174,6 +372,10 @@
       .header { padding: 12px 16px; }
       .tabs { padding: 0 16px; }
       .doughnut-container { flex-direction: column; }
+      .top-split { grid-template-columns: 1fr; }
+      .flow { flex-wrap: wrap; gap: 8px; }
+      .flow-arrow { display: none; }
+      .flow-stage { flex: none; width: calc(50% - 4px); }
     }
   </style>
 </head>
@@ -554,11 +756,57 @@
           </div>
         </div>
 
-        <!-- Pipeline placeholder -->
+        <!-- Pipeline -->
         <div class="big-divider"></div>
         <div id="pipelineSection">
-          <!-- Pipeline will be added in next task -->
-          <div style="text-align: center; padding: 40px; color: var(--text-3);">Pipeline section loading...</div>
+          <div id="pipelineLoading" class="loading">Loading pipeline data</div>
+          <div id="pipelineContent" style="display:none;">
+
+            <!-- Track 1: Onboarding + Membership -->
+            <div class="section-header" style="margin-top: 0;">
+              <div class="section-dot" style="background: var(--accent);"></div>
+              <div class="section-label">Onboarding & Membership</div>
+              <div class="section-line"></div>
+            </div>
+
+            <div class="top-split">
+              <div class="track-card">
+                <div class="track-header"><div class="section-dot" style="background: var(--accent);"></div>Onboarding</div>
+                <div class="track-body">
+                  <div class="flow" id="onboardingFlow"><!-- rendered by JS --></div>
+                </div>
+              </div>
+              <div class="track-card">
+                <div class="track-header"><div class="section-dot" style="background: var(--purple);"></div>Membership</div>
+                <div class="track-body">
+                  <div class="flow" id="membershipFlow"><!-- rendered by JS --></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Track 2: Reorder Pipeline -->
+            <div class="section-header">
+              <div class="section-dot" style="background: var(--orange);"></div>
+              <div class="section-label">Reorder Pipeline</div>
+              <div class="section-line"></div>
+            </div>
+
+            <div class="reorder-wrap">
+              <div class="reorder-body">
+                <div class="flow" id="reorderFlow"><!-- rendered by JS --></div>
+              </div>
+            </div>
+
+            <!-- Track 3: Rotation Track -->
+            <div class="section-header">
+              <div class="section-dot" style="background: var(--teal);"></div>
+              <div class="section-label">Rotation Track</div>
+              <div class="section-line"></div>
+              <div class="section-note">4-touch nurture per product</div>
+            </div>
+
+            <div id="rotationRows"><!-- rendered by JS --></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1183,6 +1431,9 @@ async function loadMonthlyTab() {
     loading.style.display = 'none';
     content.style.display = 'block';
     tabDataLoaded.monthly = selectedMonth;
+
+    // Load pipeline data (non-blocking — uses apiSafe so failures are graceful)
+    loadPipelineData();
   } catch (e) {
     loading.textContent = 'Error: ' + e.message;
     loading.className = 'error-msg';
@@ -1320,6 +1571,234 @@ function renderMoDailyRepeat(daily) {
       },
     },
   });
+}
+
+// ===== PIPELINE HELPERS =====
+const PRODUCT_COLORS = {
+  '補骨': '#7C3AED',
+  '孖寶': '#EA580C',
+  'SPP': '#059669',
+  'BLZ': '#2563EB',
+  'BGS': '#DC2626',
+  'HMG': '#A1A1AA',
+};
+
+function getDangerClass(actioned, total) {
+  if (total === 0) return '';
+  const pct = (actioned / total) * 100;
+  if (pct > 50) return 'good';
+  if (pct >= 30) return 'warning';
+  return 'danger';
+}
+
+function flowArrowSvg() {
+  return '<div class="flow-arrow"><svg viewBox="0 0 20 20" fill="none" width="20" height="20"><path d="M4 10h12M12 6l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
+}
+
+function renderFlowStage(count, label, actioned, pending, colorVar, isGraduated, flexStyle) {
+  if (isGraduated) {
+    return `<div class="flow-stage graduated"${flexStyle ? ' style="' + flexStyle + '"' : ''}>
+      <div class="stage-top"><div class="stage-count" style="color: var(--green);">${fmt(count)}</div></div>
+      <div class="stage-label">${label}</div>
+      <div style="font-size: 10px; color: var(--green); font-weight: 500; margin-top: 6px;">All done</div>
+    </div>`;
+  }
+  const total = (actioned || 0) + (pending || 0);
+  const pct = total > 0 ? Math.round((actioned / total) * 100) : 0;
+  const dangerClass = getDangerClass(actioned, total);
+  const fillColor = dangerClass === 'good' ? 'var(--green)' : dangerClass === 'warning' ? 'var(--orange)' : dangerClass === 'danger' ? 'var(--red)' : (colorVar || 'var(--accent)');
+  return `<div class="flow-stage ${dangerClass}"${flexStyle ? ' style="' + flexStyle + '"' : ''}>
+    <div class="stage-top">
+      <div class="stage-count" style="color: ${colorVar || 'var(--text)'};">${fmt(count)}</div>
+      <div class="stage-pct">${pct}%</div>
+    </div>
+    <div class="stage-label">${label}</div>
+    <div class="progress-track"><div class="progress-fill" style="width: ${pct}%; background: ${fillColor};"></div></div>
+    <div class="progress-legend"><span>${fmt(actioned)} sent</span><span>${fmt(pending)} pend</span></div>
+  </div>`;
+}
+
+function renderOnboardingFlow(data) {
+  const el = document.getElementById('onboardingFlow');
+  if (!data || !el) return;
+  const stages = [
+    { key: 'DOSAGE_GUIDE', label: 'Dosage Guide' },
+    { key: 'COMPLIANCE_CHECK', label: 'Compliance' },
+    { key: 'MONTH_REVIEW', label: 'Month Review' },
+    { key: 'GRADUATED', label: 'Graduated', graduated: true },
+  ];
+  let html = '';
+  stages.forEach((s, i) => {
+    if (i > 0) html += flowArrowSvg();
+    const d = data[s.key] || {};
+    if (s.graduated) {
+      html += renderFlowStage(d.total || 0, s.label, 0, 0, 'var(--green)', true);
+    } else {
+      html += renderFlowStage(d.total || 0, s.label, d.actioned || 0, d.pending || 0, 'var(--accent)');
+    }
+  });
+  el.innerHTML = html;
+}
+
+function renderMembershipFlow(data) {
+  const el = document.getElementById('membershipFlow');
+  if (!data || !el) return;
+  const total = data.ask_pending || 0;
+  const actioned = data.actioned || 0;
+  const pending = data.pending_untouched || 0;
+  let html = renderFlowStage(total, 'Ask Pending', actioned, pending, 'var(--purple)');
+  html += flowArrowSvg();
+  html += `<div class="flow-stage graduated">
+    <div class="stage-top"><div class="stage-count" style="color: var(--green);">${fmt(data.registered || 0)}</div></div>
+    <div class="stage-label">Registered</div>
+    <div style="font-size: 10px; color: var(--green); font-weight: 500; margin-top: 6px;">${fmtPct(data.rate || 0)} rate</div>
+  </div>`;
+  el.innerHTML = html;
+}
+
+function renderReorderFlow(data) {
+  const el = document.getElementById('reorderFlow');
+  if (!data || !el) return;
+  const due = data.due || {};
+  const converted = data.converted || {};
+  const lapsed = data.lapsed || {};
+
+  // Due stage
+  let html = renderFlowStage(due.total || 0, 'Reorder Due', due.actioned || 0, due.pending || 0, 'var(--orange)');
+  // Add product chips inside the due stage — inject before closing div
+  if (due.by_product && Object.keys(due.by_product).length > 0) {
+    const chips = Object.entries(due.by_product).map(([sku, count]) =>
+      `<span class="reorder-chip">${sku} ${count}</span>`
+    ).join('');
+    html = html.replace(/<\/div>\s*$/, `<div class="reorder-products">${chips}</div></div>`);
+  }
+
+  html += flowArrowSvg();
+
+  // Converted stage
+  html += `<div class="flow-stage" style="flex: 0.7;">
+    <div class="stage-top"><div class="stage-count" style="color: var(--green);">${fmt(converted.count || 0)}</div></div>
+    <div class="stage-label">Converted</div>
+    <div class="funnel-rate" style="color: var(--green);">${fmtPct(converted.rate || 0)}</div>
+    <div class="funnel-rate-label">conversion rate</div>
+  </div>`;
+
+  html += flowArrowSvg();
+
+  // Lapsed stage
+  html += `<div class="flow-stage" style="flex: 0.7; background: var(--red-bg); border-color: var(--red);">
+    <div class="stage-top"><div class="stage-count" style="color: var(--red);">${fmt(lapsed.count || 0)}</div></div>
+    <div class="stage-label">Lapsed</div>
+    <div class="funnel-rate" style="color: var(--text-3);">${fmtPct(lapsed.rate || 0)}</div>
+    <div class="funnel-rate-label">win-back rate</div>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+function renderRotationRows(data) {
+  const el = document.getElementById('rotationRows');
+  if (!data || !el) return;
+
+  // Sort by total_customers descending
+  const sorted = [...data].sort((a, b) => (b.total_customers || 0) - (a.total_customers || 0));
+  const SHOW_DEFAULT = 3;
+
+  const stageKeys = [
+    { key: 'ROTATE_KNOWLEDGE', label: 'Knowledge' },
+    { key: 'ROTATE_TESTIMONIAL', label: 'Testimonial' },
+    { key: 'ROTATE_TIPS', label: 'Tips' },
+    { key: 'ROTATE_CHECKIN', label: 'Checkin' },
+    { key: 'DONE', label: 'Done', graduated: true },
+  ];
+
+  let html = '';
+  sorted.forEach((product, idx) => {
+    const color = PRODUCT_COLORS[product.sku] || '#A1A1AA';
+    const hidden = idx >= SHOW_DEFAULT ? ' style="display:none;"' : '';
+    html += `<div class="product-row rotation-product-row"${hidden}>
+      <div class="product-header">
+        <div class="product-name"><div class="product-badge" style="background: ${color};">${product.sku}</div>${product.sku}</div>
+        <div class="product-total">${fmt(product.total_customers)} customers</div>
+      </div>
+      <div class="product-body">
+        <div class="flow">`;
+
+    stageKeys.forEach((s, si) => {
+      if (si > 0) html += flowArrowSvg();
+      const stg = (product.stages || {})[s.key] || {};
+      if (s.graduated) {
+        html += `<div class="flow-stage graduated" style="flex: 0.7;">
+          <div class="stage-top"><div class="stage-count" style="color: var(--green);">${fmt(stg.total || 0)}</div></div>
+          <div class="stage-label">${s.label}</div>
+          <div style="font-size: 10px; color: var(--green); font-weight: 500; margin-top: 6px;">4/4 complete</div>
+        </div>`;
+      } else {
+        html += renderFlowStage(stg.total || 0, s.label, stg.actioned || 0, stg.pending || 0, 'var(--teal)');
+      }
+    });
+
+    html += `</div></div></div>`;
+  });
+
+  // "Show X more" toggle
+  if (sorted.length > SHOW_DEFAULT) {
+    const moreCount = sorted.length - SHOW_DEFAULT;
+    html += `<button class="rotation-toggle" id="rotationToggle">Show ${moreCount} more</button>`;
+  }
+
+  el.innerHTML = html;
+
+  // Toggle handler
+  const toggleBtn = document.getElementById('rotationToggle');
+  if (toggleBtn) {
+    let expanded = false;
+    toggleBtn.addEventListener('click', () => {
+      expanded = !expanded;
+      const rows = el.querySelectorAll('.rotation-product-row');
+      rows.forEach((row, i) => {
+        if (i >= SHOW_DEFAULT) {
+          row.style.display = expanded ? '' : 'none';
+        }
+      });
+      const hiddenCount = sorted.length - SHOW_DEFAULT;
+      toggleBtn.textContent = expanded ? `Hide ${hiddenCount}` : `Show ${hiddenCount} more`;
+    });
+  }
+}
+
+async function loadPipelineData() {
+  const loadingEl = document.getElementById('pipelineLoading');
+  const contentEl = document.getElementById('pipelineContent');
+  if (!loadingEl || !contentEl) return;
+
+  loadingEl.style.display = 'block';
+  loadingEl.className = 'loading';
+  loadingEl.textContent = 'Loading pipeline data';
+  contentEl.style.display = 'none';
+
+  const [onboarding, membership, reorder, rotation] = await Promise.all([
+    apiSafe('/pipeline/onboarding'),
+    apiSafe('/pipeline/membership'),
+    apiSafe('/pipeline/reorder?month=' + selectedMonth),
+    apiSafe('/pipeline/rotation'),
+  ]);
+
+  // If all endpoints failed, show a subtle message instead of error
+  if (!onboarding && !membership && !reorder && !rotation) {
+    loadingEl.textContent = 'Pipeline data not available yet';
+    loadingEl.className = 'loading';
+    loadingEl.style.cssText = 'text-align:center;padding:40px;color:var(--text-3);font-size:14px;';
+    return;
+  }
+
+  if (onboarding) renderOnboardingFlow(onboarding);
+  if (membership) renderMembershipFlow(membership);
+  if (reorder) renderReorderFlow(reorder);
+  if (rotation) renderRotationRows(rotation);
+
+  loadingEl.style.display = 'none';
+  contentEl.style.display = 'block';
 }
 
 // ===== TARGET SAVE =====
