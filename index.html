@@ -2090,8 +2090,11 @@ function getTestMilestone(daysSinceLaunch) {
 }
 
 function renderThumb(ad) {
-  const type = (ad.object_type || '').charAt(0) || '?';
-  const typeLabel = ad.object_type === 'VIDEO' ? 'Video' : 'Picture';
+  const creativeType = ad.creative_type || ad.object_type || '';
+  const isVideo = creativeType === 'VIDEO';
+  const typeChar = isVideo ? 'V' : 'P';
+  const typeLabel = isVideo ? 'Video' : 'Picture';
+  const bgColor = isVideo ? 'var(--accent)' : 'var(--orange)';
   if (ad.thumbnail_url) {
     return `<div class="ad-thumb">
       <img src="${ad.thumbnail_url}" alt="">
@@ -2101,12 +2104,7 @@ function renderThumb(ad) {
       </div>
     </div>`;
   }
-  return `<div class="ad-thumb" style="background: var(--border-light); color: var(--text-3); font-size: 11px;">${type}
-    <div class="thumb-preview">
-      <div class="thumb-preview-img">${typeLabel} ad — no preview available</div>
-      <div class="thumb-preview-info">${ad.ad_name || '--'} — ${typeLabel} ad</div>
-    </div>
-  </div>`;
+  return `<div class="ad-thumb" style="background: ${bgColor}; color: white; font-size: 11px; font-weight: 600;">${typeChar}</div>`;
 }
 
 function getAdMessages(ad) {
@@ -2144,6 +2142,10 @@ function groupAdsByCampaign(ads) {
     const cid = ad.campaign_id || ad.campaign_name || 'unknown';
     if (!map[cid]) map[cid] = { campaign_name: ad.campaign_name, campaign_id: cid, ads: [] };
     map[cid].ads.push(ad);
+  });
+  // Sort ads within each campaign by spend descending
+  Object.values(map).forEach(group => {
+    group.ads.sort((a, b) => (parseFloat(b.spend) || 0) - (parseFloat(a.spend) || 0));
   });
   return map;
 }
@@ -2542,11 +2544,23 @@ async function loadAdsTab() {
   content.style.display = 'none';
 
   try {
+    // Build date range params based on selected time pill
+    let dateParams = `month=${selectedMonth}`;
+    const range = typeof adsTimeRange !== 'undefined' ? adsTimeRange : 'mtd';
+    if (range !== 'mtd') {
+      const today = new Date();
+      const until = today.toISOString().split('T')[0];
+      const daysBack = range === '7d' ? 7 : range === '14d' ? 14 : 30;
+      const sinceDate = new Date(today.getTime() - daysBack * 86400000);
+      const since = sinceDate.toISOString().split('T')[0];
+      dateParams = `since=${since}&until=${until}`;
+    }
+
     // Fetch campaign + ad level data in parallel
     const [campaignData, msgAds, peAds] = await Promise.all([
-      apiSafe(`/meta/campaign-insights?month=${selectedMonth}`),
-      apiSafe(`/meta/ad-insights?month=${selectedMonth}&objective=REPLIES`),
-      apiSafe(`/meta/ad-insights?month=${selectedMonth}&objective=POST_ENGAGEMENT`),
+      apiSafe(`/meta/campaign-insights?${dateParams}`),
+      apiSafe(`/meta/ad-insights?${dateParams}&objective=REPLIES`),
+      apiSafe(`/meta/ad-insights?${dateParams}&objective=POST_ENGAGEMENT`),
     ]);
 
     // Combine all campaigns from all objectives
