@@ -6,355 +6,174 @@
   <title>Minionions Marketing — Boss View</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <style>
-    /* ===== DESIGN TOKENS ===== */
     :root {
-      --color-primary: #2563EB;
-      --color-primary-light: #DBEAFE;
-      --color-secondary: #3B82F6;
-      --color-accent: #F97316;
-      --color-accent-light: #FFF7ED;
-      --color-bg: #F8FAFC;
-      --color-surface: #FFFFFF;
-      --color-text: #1E293B;
-      --color-text-secondary: #64748B;
-      --color-text-muted: #94A3B8;
-      --color-border: #E2E8F0;
-      --color-border-light: #F1F5F9;
-      --color-success: #16A34A;
-      --color-success-light: #DCFCE7;
-      --color-danger: #DC2626;
-      --color-danger-light: #FEE2E2;
-      --color-warning: #D97706;
-      --color-warning-light: #FEF3C7;
-      --color-purple: #7C3AED;
-      --color-purple-light: #EDE9FE;
-      --font-sans: 'Fira Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-mono: 'Fira Code', 'SF Mono', monospace;
-      --radius-sm: 6px;
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-md: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --text: #18181B;
+      --text-2: #52525B;
+      --text-3: #A1A1AA;
+      --border: #E4E4E7;
+      --border-light: #F4F4F5;
+      --accent: #2563EB;
+      --green: #059669;
+      --green-bg: #ECFDF5;
+      --orange: #EA580C;
+      --orange-bg: #FFF7ED;
+      --red: #DC2626;
+      --red-bg: #FEF2F2;
+      --purple: #7C3AED;
+      --teal: #0D9488;
+      --font: 'Outfit', system-ui, sans-serif;
+      --mono: 'Geist Mono', 'SF Mono', monospace;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { font-size: 16px; -webkit-font-smoothing: antialiased; }
-    body {
-      font-family: var(--font-sans);
-      color: var(--color-text);
-      background: var(--color-bg);
-      line-height: 1.6;
-    }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.5; }
 
     /* ===== PASSWORD GATE ===== */
-    .gate {
-      position: fixed;
-      inset: 0;
-      background: var(--color-bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
+    .gate { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 1000; }
     .gate.hidden { display: none; }
-    .gate__box {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: 40px;
-      width: 360px;
-      text-align: center;
-      box-shadow: var(--shadow-lg);
-    }
-    .gate__title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-    .gate__subtitle {
-      font-size: 13px;
-      color: var(--color-text-secondary);
-      margin-bottom: 24px;
-    }
-    .gate__input {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-family: var(--font-sans);
-      font-size: 14px;
-      margin-bottom: 12px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .gate__input:focus { border-color: var(--color-primary); }
-    .gate__btn {
-      width: 100%;
-      padding: 10px;
-      background: var(--color-primary);
-      color: white;
-      border: none;
-      border-radius: var(--radius-md);
-      font-family: var(--font-sans);
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
+    .gate__box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 40px; width: 360px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .gate__title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    .gate__subtitle { font-size: 13px; color: var(--text-2); margin-bottom: 24px; }
+    .gate__input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--font); font-size: 14px; margin-bottom: 12px; outline: none; transition: border-color 0.15s; }
+    .gate__input:focus { border-color: var(--accent); }
+    .gate__btn { width: 100%; padding: 10px; background: var(--accent); color: white; border: none; border-radius: 8px; font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
     .gate__btn:hover { background: #1D4ED8; }
-    .gate__error {
-      color: var(--color-danger);
-      font-size: 13px;
-      margin-top: 8px;
-      display: none;
-    }
+    .gate__error { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
 
-    /* ===== MAIN LAYOUT ===== */
+    /* ===== APP LAYOUT ===== */
     .app { display: none; }
     .app.visible { display: block; }
 
     /* ===== HEADER ===== */
-    .header {
-      background: var(--color-surface);
-      border-bottom: 1px solid var(--color-border);
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .header__left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .header__brand {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--color-primary);
-    }
-    .header__title {
-      font-size: 18px;
-      font-weight: 600;
-    }
-    .header__controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .header select, .header input[type="number"] {
-      padding: 6px 10px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      font-family: var(--font-sans);
-      font-size: 13px;
-      background: var(--color-surface);
-      outline: none;
-    }
-    .header select:focus, .header input:focus {
-      border-color: var(--color-primary);
-    }
-    .btn {
-      padding: 6px 14px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      font-family: var(--font-sans);
-      font-size: 13px;
-      background: var(--color-surface);
-      cursor: pointer;
-      transition: all 0.15s;
-      color: var(--color-text);
-    }
-    .btn:hover { background: var(--color-border-light); }
-    .btn--primary {
-      background: var(--color-primary);
-      color: white;
-      border-color: var(--color-primary);
-    }
+    .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .header__left { display: flex; align-items: center; gap: 16px; }
+    .header__brand { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); }
+    .header__title { font-size: 18px; font-weight: 600; }
+    .header__controls { display: flex; align-items: center; gap: 10px; }
+    .header select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-family: var(--font); font-size: 13px; background: var(--surface); outline: none; }
+    .header select:focus { border-color: var(--accent); }
+    .btn { padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px; font-family: var(--font); font-size: 13px; background: var(--surface); cursor: pointer; transition: all 0.15s; color: var(--text); }
+    .btn:hover { background: var(--border-light); }
+    .btn--primary { background: var(--accent); color: white; border-color: var(--accent); }
     .btn--primary:hover { background: #1D4ED8; }
     .btn--sm { padding: 4px 10px; font-size: 12px; }
 
     /* ===== CONFIG BAR ===== */
-    .config {
-      background: var(--color-border-light);
-      border-bottom: 1px solid var(--color-border);
-      padding: 12px 24px;
-      display: none;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
+    .config { background: var(--border-light); border-bottom: 1px solid var(--border); padding: 12px 24px; display: none; align-items: center; gap: 12px; flex-wrap: wrap; }
     .config.visible { display: flex; }
-    .config label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--color-text-secondary);
-    }
-    .config input {
-      padding: 5px 10px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      background: var(--color-surface);
-      outline: none;
-      flex: 1;
-      min-width: 200px;
-    }
-    .config__status {
-      font-size: 12px;
-      padding: 4px 8px;
-      border-radius: var(--radius-sm);
-    }
-    .config__status--ok { background: var(--color-success-light); color: var(--color-success); }
-    .config__status--err { background: var(--color-danger-light); color: var(--color-danger); }
+    .config label { font-size: 12px; font-weight: 500; color: var(--text-2); }
+    .config input { padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; font-family: var(--mono); font-size: 12px; background: var(--surface); outline: none; flex: 1; min-width: 200px; }
+    .config__status { font-size: 12px; padding: 4px 8px; border-radius: 6px; }
+    .config__status--ok { background: var(--green-bg); color: var(--green); }
+    .config__status--err { background: var(--red-bg); color: var(--red); }
+
+    /* ===== TABS ===== */
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); background: var(--surface); padding: 0 24px; }
+    .tab { padding: 10px 20px; font-size: 13px; font-weight: 500; color: var(--text-3); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; user-select: none; }
+    .tab:hover { color: var(--text-2); }
+    .tab.active { color: var(--text); border-bottom-color: var(--text); font-weight: 600; }
+    .tab--disabled { opacity: 0.5; cursor: default; }
 
     /* ===== CONTENT ===== */
-    .content {
-      padding: 20px 24px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
+    .content { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
-    /* ===== KPI CARDS ===== */
-    .kpi-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .kpi-group {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: 16px 20px;
-      box-shadow: var(--shadow-sm);
-    }
-    .kpi-group__title {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      color: var(--color-text-muted);
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--color-border-light);
-    }
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-    .kpi-grid--3col { grid-template-columns: repeat(3, 1fr); }
-    .kpi-grid--2col { grid-template-columns: repeat(2, 1fr); }
-    .kpi-item {}
-    .kpi-item__label {
-      font-size: 10px;
-      font-weight: 500;
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-    .kpi-item__value {
-      font-size: 16px;
-      font-weight: 600;
-      font-family: var(--font-mono);
-      color: var(--color-text);
-      margin-top: 2px;
-    }
-    .kpi-item__value--positive { color: var(--color-success); }
-    .kpi-item__value--negative { color: var(--color-danger); }
-    .kpi-item__value--accent { color: var(--color-accent); }
+    /* ===== SECTION HEADERS ===== */
+    .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; margin-top: 32px; }
+    .section-header:first-child { margin-top: 0; }
+    .section-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); white-space: nowrap; }
+    .section-line { flex: 1; height: 1px; background: var(--border-light); }
+    .section-note { font-size: 10px; color: var(--text-3); white-space: nowrap; }
+    .section-note a { color: var(--accent); text-decoration: none; cursor: pointer; }
+    .section-note a:hover { text-decoration: underline; }
+
+    /* ===== KPI GRID (gap-based, no card boxing) ===== */
+    .kpi-row { display: grid; gap: 1px; background: var(--border-light); border-radius: 12px; overflow: hidden; }
+    .kpi-row--5 { grid-template-columns: repeat(5, 1fr); }
+    .kpi-row--4 { grid-template-columns: repeat(4, 1fr); }
+    .kpi-row--3 { grid-template-columns: repeat(3, 1fr); }
+    .kpi-cell { background: var(--surface); padding: 18px 20px; }
+    .kpi-label { font-size: 11px; font-weight: 500; color: var(--text-3); letter-spacing: 0.02em; margin-bottom: 4px; }
+    .kpi-value { font-family: var(--mono); font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
+    .kpi-value--sm { font-size: 16px; font-weight: 600; }
+    .kpi-delta { font-family: var(--mono); font-size: 11px; font-weight: 500; margin-top: 2px; }
+    .up { color: var(--green); }
+    .down { color: var(--red); }
 
     /* Target input */
-    .target-input {
-      width: 100px;
-      padding: 4px 8px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      font-family: var(--font-mono);
-      font-size: 14px;
-      font-weight: 600;
-      outline: none;
-      text-align: right;
-    }
-    .target-input:focus { border-color: var(--color-primary); }
+    .target-input { width: 100px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; font-family: var(--mono); font-size: 14px; font-weight: 600; outline: none; text-align: right; }
+    .target-input:focus { border-color: var(--accent); }
 
-    /* ===== CHART GRID ===== */
-    .chart-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
-    .chart-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: 16px 20px;
-      box-shadow: var(--shadow-sm);
-    }
-    .chart-card--full { grid-column: 1 / -1; }
-    .chart-card__title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--color-text);
-      margin-bottom: 12px;
-    }
-    .chart-card__subtitle {
-      font-size: 11px;
-      color: var(--color-text-muted);
-      margin-top: -8px;
-      margin-bottom: 12px;
-    }
-    .chart-wrap {
-      position: relative;
-      width: 100%;
-      height: 280px;
-    }
-    .chart-wrap--sm { height: 220px; }
-    .chart-wrap canvas {
-      width: 100% !important;
-      height: 100% !important;
-    }
+    /* ===== CHART AREAS ===== */
+    .chart-area { background: var(--surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; margin-top: 12px; }
+    .chart-label { font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 12px; }
+    .chart-wrap { position: relative; width: 100%; height: 220px; }
+    .chart-wrap--lg { height: 280px; }
+    .chart-wrap--sm { height: 160px; }
+    .chart-wrap canvas { width: 100% !important; height: 100% !important; }
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+
+    /* ===== SUBSECTION CARDS (New/Repeat funnels) ===== */
+    .subsection { border: 1px solid var(--border-light); border-radius: 12px; overflow: hidden; }
+    .subsection-head { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); }
+    .subsection-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .subsection-badge { font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 100px; }
+    .subsection .kpi-row { border-radius: 0; }
+    .subsection .chart-area { border: none; border-radius: 0; margin-top: 0; border-top: 1px solid var(--border-light); }
+
+    /* ===== MINI CARDS (Region, Membership) ===== */
+    .mini-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .mini-card { border: 1px solid var(--border-light); border-radius: 12px; overflow: hidden; }
+    .mini-header { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--border-light); font-size: 12px; font-weight: 600; color: var(--text-2); }
+    .mini-body { display: grid; gap: 1px; background: var(--border-light); }
+    .mini-body--3 { grid-template-columns: repeat(3, 1fr); }
+    .mini-body--4 { grid-template-columns: repeat(4, 1fr); }
+    .mini-cell { background: var(--surface); padding: 14px 16px; text-align: center; }
+    .mini-count { font-family: var(--mono); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+    .mini-label { font-size: 10px; font-weight: 500; color: var(--text-3); margin-top: 2px; }
+
+    /* ===== DOUGHNUT ===== */
+    .doughnut-container { display: flex; align-items: center; gap: 24px; padding: 20px; }
+    .doughnut-chart-wrap { width: 140px; height: 140px; flex-shrink: 0; }
+    .doughnut-legend { display: flex; flex-direction: column; gap: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 10px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .legend-text { font-size: 13px; font-weight: 500; }
+    .legend-value { font-family: var(--mono); font-size: 13px; font-weight: 600; margin-left: auto; padding-left: 16px; }
+
+    /* ===== TOOLTIP ===== */
+    .has-tooltip { position: relative; cursor: help; border-bottom: 1px dashed var(--text-3); }
+    .has-tooltip .tooltip-text { visibility: hidden; opacity: 0; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--text); color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 400; white-space: normal; width: 220px; text-align: center; transition: opacity 0.15s; z-index: 10; margin-bottom: 4px; }
+    .has-tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+    /* ===== DIVIDER ===== */
+    .big-divider { height: 2px; background: var(--border); margin: 40px 0 8px; border-radius: 1px; }
 
     /* ===== LOADING ===== */
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: var(--color-text-muted);
-      font-size: 14px;
-    }
-    .loading::after {
-      content: '';
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid var(--color-border);
-      border-top-color: var(--color-primary);
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      margin-left: 8px;
-      vertical-align: middle;
-    }
+    .loading { text-align: center; padding: 40px; color: var(--text-3); font-size: 14px; }
+    .loading::after { content: ''; display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; margin-left: 8px; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .error-msg { text-align: center; padding: 40px; color: var(--red); font-size: 14px; }
+
     /* ===== RESPONSIVE ===== */
-    @media (max-width: 1024px) {
-      .kpi-row { grid-template-columns: 1fr; }
-      .chart-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 640px) {
-      .content { padding: 12px; }
+    @media (max-width: 768px) {
+      .kpi-row--5, .kpi-row--4, .kpi-row--3 { grid-template-columns: repeat(2, 1fr); }
+      .chart-grid, .split, .mini-row { grid-template-columns: 1fr; }
+      .mini-body--4 { grid-template-columns: repeat(2, 1fr); }
+      .content { padding: 16px; }
       .header { padding: 12px 16px; }
-      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-      .chart-wrap { height: 220px; }
+      .tabs { padding: 0 16px; }
+      .doughnut-container { flex-direction: column; }
     }
   </style>
 </head>
@@ -399,186 +218,359 @@
     <span class="config__status" id="cfgStatus"></span>
   </div>
 
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab" data-tab="lifetime">Lifetime</div>
+    <div class="tab" data-tab="monthly">Monthly</div>
+    <div class="tab tab--disabled" data-tab="ads">Ads</div>
+  </div>
+
   <!-- Content -->
-  <div class="content" id="content">
-    <div class="loading" id="loadingMsg">Loading dashboard data</div>
+  <div class="content">
 
-    <!-- KPI Cards -->
-    <div class="kpi-row" id="kpiRow" style="display:none;">
-      <!-- Lifetime Stats -->
-      <div class="kpi-group">
-        <div class="kpi-group__title">Lifetime Stats</div>
-        <div class="kpi-grid">
-          <div class="kpi-item">
-            <div class="kpi-item__label">Total PV</div>
-            <div class="kpi-item__value" id="ltPv">—</div>
+    <!-- ===== TAB 1: LIFETIME STATS ===== -->
+    <div class="tab-panel" id="panel-lifetime">
+      <div id="lifetimeLoading" class="loading">Loading lifetime data</div>
+      <div id="lifetimeContent" style="display:none;">
+
+        <!-- Financial Overview -->
+        <div class="section-header" style="margin-top: 0;">
+          <div class="section-dot" style="background: var(--accent);"></div>
+          <div class="section-label">Financial Overview</div>
+          <div class="section-line"></div>
+        </div>
+
+        <div class="kpi-row kpi-row--4">
+          <div class="kpi-cell">
+            <div class="kpi-label">Total Sales PV</div>
+            <div class="kpi-value" id="lt-total-pv">--</div>
+            <div class="kpi-delta" id="lt-total-pv-delta"></div>
           </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Orders</div>
-            <div class="kpi-item__value" id="ltOrders">—</div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Total Orders</div>
+            <div class="kpi-value" id="lt-total-orders">--</div>
+            <div class="kpi-delta" id="lt-total-orders-delta"></div>
           </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Customers</div>
-            <div class="kpi-item__value" id="ltCustomers">—</div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Total Customers</div>
+            <div class="kpi-value" id="lt-total-customers">--</div>
+            <div class="kpi-delta" id="lt-total-customers-delta"></div>
           </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Avg Order</div>
-            <div class="kpi-item__value" id="ltAvgOrder">—</div>
-          </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Commission</div>
-            <div class="kpi-item__value" id="ltCommission">—</div>
-          </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Gross Profit</div>
-            <div class="kpi-item__value" id="ltGrossProfit">—</div>
-          </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Ad Spend</div>
-            <div class="kpi-item__value" id="ltAdSpend">—</div>
-          </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Net Profit</div>
-            <div class="kpi-item__value" id="ltNetProfit">—</div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Avg Order Size</div>
+            <div class="kpi-value" id="lt-avg-order">--</div>
+            <div class="kpi-delta" style="color: var(--text-3);">PV per order</div>
           </div>
         </div>
-      </div>
 
-      <!-- Monthly Stats -->
-      <div class="kpi-group">
-        <div class="kpi-group__title">Monthly Stats (<span id="monthLabel"></span>)</div>
-        <div class="kpi-grid">
-          <div class="kpi-item">
-            <div class="kpi-item__label">Total PV</div>
-            <div class="kpi-item__value" id="moPv">—</div>
+        <div class="kpi-row kpi-row--3" style="margin-top: 1px;">
+          <div class="kpi-cell">
+            <div class="kpi-label">Total Commission</div>
+            <div class="kpi-value" id="lt-commission">--</div>
+            <div class="kpi-delta" id="lt-commission-delta" style="color: var(--text-3);"></div>
           </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Orders</div>
-            <div class="kpi-item__value" id="moOrders">—</div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Total Ad Spend</div>
+            <div class="kpi-value" id="lt-ad-spend" style="color: var(--orange);">--</div>
+            <div class="kpi-delta" style="color: var(--text-3);">RM (since Oct 2023)</div>
           </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Customers</div>
-            <div class="kpi-item__value" id="moCustomers">—</div>
-          </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Avg Order</div>
-            <div class="kpi-item__value" id="moAvgOrder">—</div>
-          </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Commission</div>
-            <div class="kpi-item__value" id="moCommission">—</div>
-          </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Ad Spend</div>
-            <div class="kpi-item__value" id="moAdSpend">—</div>
-          </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Net Profit</div>
-            <div class="kpi-item__value" id="moNetProfit">—</div>
-          </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Run Rate</div>
-            <div class="kpi-item__value kpi-item__value--accent" id="moRunRate">—</div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Net Profit</div>
+            <div class="kpi-value" id="lt-net-profit">--</div>
+            <div class="kpi-delta" id="lt-net-profit-delta"></div>
           </div>
         </div>
-      </div>
 
-      <!-- Target Tracker -->
-      <div class="kpi-group">
-        <div class="kpi-group__title">Target Tracker</div>
-        <div class="kpi-grid kpi-grid--2col">
-          <div class="kpi-item">
-            <div class="kpi-item__label">Monthly Target</div>
-            <div style="margin-top:2px;">
-              <input type="number" class="target-input" id="targetInput" placeholder="Set target">
-              <button class="btn btn--sm btn--primary" id="targetSave" style="margin-left:4px;">Set</button>
+        <!-- Sales Trends -->
+        <div class="section-header">
+          <div class="section-dot" style="background: var(--teal);"></div>
+          <div class="section-label">Sales Trends</div>
+          <div class="section-line"></div>
+        </div>
+
+        <div class="chart-area" style="margin-top: 0;">
+          <div class="chart-label">Monthly Sales Trend (rolling 12 months)</div>
+          <div class="chart-wrap chart-wrap--lg"><canvas id="ltChartMonthlySales"></canvas></div>
+        </div>
+
+        <div class="chart-grid">
+          <div class="chart-area" style="margin-top: 0;">
+            <div class="chart-label">Monthly Revenue and Cost</div>
+            <div class="chart-wrap"><canvas id="ltChartRevCost"></canvas></div>
+          </div>
+          <div class="chart-area" style="margin-top: 0;">
+            <div class="chart-label">Monthly Net Profit</div>
+            <div class="chart-wrap"><canvas id="ltChartNetProfit"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Customer Composition -->
+        <div class="section-header">
+          <div class="section-dot" style="background: var(--purple);"></div>
+          <div class="section-label">Customer Composition</div>
+          <div class="section-line"></div>
+        </div>
+
+        <div class="mini-row">
+          <!-- New vs Repeat doughnut -->
+          <div class="mini-card">
+            <div class="mini-header">
+              <div class="section-dot" style="background: var(--purple);"></div>
+              New vs Repeat (Lifetime)
+            </div>
+            <div class="doughnut-container">
+              <div class="doughnut-chart-wrap"><canvas id="ltChartCustomerMix"></canvas></div>
+              <div class="doughnut-legend" id="ltCustomerMixLegend">
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: var(--accent);"></div>
+                  <div class="legend-text">First-time buyers</div>
+                  <div class="legend-value" id="ltNewCount">--</div>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: var(--orange);"></div>
+                  <div class="legend-text">Repeat buyers</div>
+                  <div class="legend-value" id="ltRepeatCount">--</div>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Daily Target</div>
-            <div class="kpi-item__value" id="tgDaily">—</div>
+
+          <!-- Region breakdown -->
+          <div class="mini-card" id="ltRegionCard">
+            <div class="mini-header">
+              <div class="section-dot" style="background: var(--teal);"></div>
+              Region Breakdown
+            </div>
+            <div class="mini-body mini-body--3" id="ltRegionBody">
+              <div class="mini-cell">
+                <div class="mini-count" style="color: var(--accent);" id="ltRegionHK">--</div>
+                <div class="mini-label">Hong Kong</div>
+              </div>
+              <div class="mini-cell">
+                <div class="mini-count" style="color: var(--purple);" id="ltRegionMO">--</div>
+                <div class="mini-label">Macau</div>
+              </div>
+              <div class="mini-cell">
+                <div class="mini-count" style="color: var(--text-3);" id="ltRegionOther">--</div>
+                <div class="mini-label">Other</div>
+              </div>
+            </div>
           </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">Progress</div>
-            <div class="kpi-item__value" id="tgProgress">—</div>
+        </div>
+
+        <!-- Membership + PV/GP -->
+        <div class="mini-row" style="margin-top: 12px;">
+          <div class="mini-card" id="ltMembershipCard">
+            <div class="mini-header">
+              <div class="section-dot" style="background: var(--green);"></div>
+              Membership Status
+            </div>
+            <div class="mini-body mini-body--4">
+              <div class="mini-cell">
+                <div class="mini-count" style="color: var(--green);" id="ltMemRegistered">--</div>
+                <div class="mini-label">Registered</div>
+              </div>
+              <div class="mini-cell">
+                <div class="mini-count" style="color: var(--orange);" id="ltMemNotRegistered">--</div>
+                <div class="mini-label">Not Registered</div>
+              </div>
+              <div class="mini-cell">
+                <div class="mini-count" style="color: var(--green);" id="ltMemRate">--</div>
+                <div class="mini-label">Registration Rate</div>
+              </div>
+              <div class="mini-cell">
+                <div class="mini-count" style="color: var(--accent);" id="ltMemVerified">--</div>
+                <div class="mini-label">Verified</div>
+              </div>
+            </div>
           </div>
-          <div class="kpi-item">
-            <div class="kpi-item__label">PV/Day Needed</div>
-            <div class="kpi-item__value" id="tgPvNeeded">—</div>
+
+          <div class="chart-area" style="margin-top: 0;">
+            <div class="chart-label">PV and Gross Profit</div>
+            <div class="chart-wrap chart-wrap--sm"><canvas id="ltChartPvGp"></canvas></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Chart Grid -->
-    <div class="chart-grid" id="chartGrid" style="display:none;">
-      <!-- 1. Monthly Sales Trend -->
-      <div class="chart-card">
-        <div class="chart-card__title">Monthly Sales Trend</div>
-        <div class="chart-wrap"><canvas id="chartMonthlySales"></canvas></div>
-      </div>
+    <!-- ===== TAB 2: MONTHLY ===== -->
+    <div class="tab-panel" id="panel-monthly">
+      <div id="monthlyLoading" class="loading">Loading monthly data</div>
+      <div id="monthlyContent" style="display:none;">
 
-      <!-- 7. Monthly Sales Target -->
-      <div class="chart-card">
-        <div class="chart-card__title">Monthly Sales Target</div>
-        <div class="chart-wrap"><canvas id="chartMonthlyTarget"></canvas></div>
-      </div>
+        <!-- Sales Overview -->
+        <div class="section-header" style="margin-top: 0;">
+          <div class="section-dot" style="background: var(--accent);"></div>
+          <div class="section-label">Sales Overview</div>
+          <div class="section-line"></div>
+        </div>
 
-      <!-- 2. Daily Sales Trend (all orders) -->
-      <div class="chart-card chart-card--full">
-        <div class="chart-card__title">Daily Sales Trend (All Orders)</div>
-        <div class="chart-card__subtitle">PV by delivery status</div>
-        <div class="chart-wrap"><canvas id="chartDailyAll"></canvas></div>
-      </div>
+        <div class="kpi-row kpi-row--5">
+          <div class="kpi-cell">
+            <div class="kpi-label">Monthly Target</div>
+            <div style="margin-top: 2px; display: flex; align-items: center; gap: 4px;">
+              <input type="number" class="target-input" id="targetInput" placeholder="Set">
+              <button class="btn btn--sm btn--primary" id="targetSave">Set</button>
+            </div>
+            <div class="kpi-delta" style="color: var(--text-3);">PV</div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Current PV</div>
+            <div class="kpi-value" id="mo-current-pv">--</div>
+            <div class="kpi-delta" id="mo-current-pv-delta"></div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Progress</div>
+            <div class="kpi-value" id="mo-progress">--</div>
+            <div class="kpi-delta" id="mo-progress-note" style="color: var(--text-3);"></div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-label">PV / Day Needed</div>
+            <div class="kpi-value" id="mo-pv-needed">--</div>
+            <div class="kpi-delta" id="mo-pv-needed-note" style="color: var(--text-3);"></div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Run Rate</div>
+            <div class="kpi-value" id="mo-run-rate">--</div>
+            <div class="kpi-delta" id="mo-run-rate-delta"></div>
+          </div>
+        </div>
 
-      <!-- 10. Daily Sales Trend (new) -->
-      <div class="chart-card">
-        <div class="chart-card__title">Daily Sales Trend (New Customers)</div>
-        <div class="chart-wrap"><canvas id="chartDailyNew"></canvas></div>
-      </div>
+        <div class="split">
+          <div class="chart-area" style="margin-top: 0;">
+            <div class="chart-label">Monthly Goal</div>
+            <div class="chart-wrap chart-wrap--sm"><canvas id="moChartGoal"></canvas></div>
+          </div>
+          <div class="chart-area" style="margin-top: 0;">
+            <div class="chart-label">Weekly Breakdown</div>
+            <div class="chart-wrap chart-wrap--sm"><canvas id="moChartWeekly"></canvas></div>
+          </div>
+        </div>
 
-      <!-- 11. Daily Sales Trend (repeat) -->
-      <div class="chart-card">
-        <div class="chart-card__title">Daily Sales Trend (Repeat Customers)</div>
-        <div class="chart-wrap"><canvas id="chartDailyRepeat"></canvas></div>
-      </div>
+        <div class="chart-area">
+          <div class="chart-label">Daily Sales Trend (all orders)</div>
+          <div class="chart-wrap chart-wrap--lg"><canvas id="moChartDailyAll"></canvas></div>
+        </div>
 
-      <!-- 9. New / Repeat Customers -->
-      <div class="chart-card">
-        <div class="chart-card__title">New / Repeat Customers</div>
-        <div class="chart-wrap chart-wrap--sm"><canvas id="chartCustomerMix"></canvas></div>
-      </div>
+        <!-- New Sales + Repeat Sales -->
+        <div class="split" style="margin-top: 32px;">
+          <!-- New Sales -->
+          <div class="subsection">
+            <div class="subsection-head">
+              <div class="subsection-title"><div class="section-dot" style="background: var(--green);"></div>New Sales</div>
+              <div class="subsection-badge" style="background: var(--green-bg); color: var(--green);" id="moNewBadge">-- orders</div>
+            </div>
+            <div class="kpi-row kpi-row--4">
+              <div class="kpi-cell">
+                <div class="kpi-label"><span class="has-tooltip">Reach<span class="tooltip-text">New messaging contacts from Meta ads. Proxy for enquiries until CTWA attribution is built.</span></span></div>
+                <div class="kpi-value" id="mo-new-reach">--</div>
+                <div class="kpi-delta" id="mo-new-reach-delta"></div>
+              </div>
+              <div class="kpi-cell">
+                <div class="kpi-label">Conversions</div>
+                <div class="kpi-value" id="mo-new-conversions">--</div>
+                <div class="kpi-delta" id="mo-new-conversions-delta"></div>
+              </div>
+              <div class="kpi-cell">
+                <div class="kpi-label">Conv. Rate</div>
+                <div class="kpi-value" id="mo-new-rate">--</div>
+                <div class="kpi-delta" id="mo-new-rate-delta"></div>
+              </div>
+              <div class="kpi-cell">
+                <div class="kpi-label">Basket Size</div>
+                <div class="kpi-value" id="mo-new-basket">--</div>
+                <div class="kpi-delta" style="color: var(--text-3);">PV avg</div>
+              </div>
+            </div>
+            <div class="chart-area">
+              <div class="chart-label">Daily new orders</div>
+              <div class="chart-wrap chart-wrap--sm"><canvas id="moChartDailyNew"></canvas></div>
+            </div>
+          </div>
 
-      <!-- 8. Weekly Sales Target -->
-      <div class="chart-card">
-        <div class="chart-card__title">Weekly Sales Target</div>
-        <div class="chart-wrap chart-wrap--sm"><canvas id="chartWeeklyTarget"></canvas></div>
-      </div>
+          <!-- Repeat Sales -->
+          <div class="subsection">
+            <div class="subsection-head">
+              <div class="subsection-title"><div class="section-dot" style="background: var(--orange);"></div>Repeat Sales</div>
+              <div class="subsection-badge" style="background: var(--orange-bg); color: var(--orange);" id="moRepeatBadge">-- orders</div>
+            </div>
+            <div class="kpi-row kpi-row--4">
+              <div class="kpi-cell">
+                <div class="kpi-label">Expiring</div>
+                <div class="kpi-value" id="mo-repeat-expiring">--</div>
+                <div class="kpi-delta" style="color: var(--text-3);">customers</div>
+              </div>
+              <div class="kpi-cell">
+                <div class="kpi-label">Conversions</div>
+                <div class="kpi-value" id="mo-repeat-conversions">--</div>
+                <div class="kpi-delta" id="mo-repeat-conversions-delta"></div>
+              </div>
+              <div class="kpi-cell">
+                <div class="kpi-label">Conv. Rate</div>
+                <div class="kpi-value" id="mo-repeat-rate">--</div>
+                <div class="kpi-delta" id="mo-repeat-rate-delta"></div>
+              </div>
+              <div class="kpi-cell">
+                <div class="kpi-label">Basket Size</div>
+                <div class="kpi-value" id="mo-repeat-basket">--</div>
+                <div class="kpi-delta" style="color: var(--text-3);">PV avg</div>
+              </div>
+            </div>
+            <div class="chart-area">
+              <div class="chart-label">Daily repeat orders</div>
+              <div class="chart-wrap chart-wrap--sm"><canvas id="moChartDailyRepeat"></canvas></div>
+            </div>
+          </div>
+        </div>
 
-      <!-- 4. PV and Gross Profit -->
-      <div class="chart-card">
-        <div class="chart-card__title">PV and Gross Profit (MYR)</div>
-        <div class="chart-wrap"><canvas id="chartPvGp"></canvas></div>
-      </div>
+        <!-- Ad Spend Summary -->
+        <div class="section-header">
+          <div class="section-dot" style="background: var(--text-3);"></div>
+          <div class="section-label">Ad Spend Summary</div>
+          <div class="section-line"></div>
+          <div class="section-note"><a href="#" id="adsTabLink">Full detail in Ads tab</a></div>
+        </div>
 
-      <!-- 5. Monthly Revenue and Cost -->
-      <div class="chart-card">
-        <div class="chart-card__title">Monthly Revenue and Cost</div>
-        <div class="chart-wrap"><canvas id="chartRevCost"></canvas></div>
-      </div>
+        <div class="kpi-row kpi-row--4">
+          <div class="kpi-cell">
+            <div class="kpi-label">Ad Spend</div>
+            <div class="kpi-value kpi-value--sm" id="mo-ad-spend">--</div>
+            <div class="kpi-delta" id="mo-ad-spend-delta"></div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Commission</div>
+            <div class="kpi-value kpi-value--sm" id="mo-commission">--</div>
+            <div class="kpi-delta" id="mo-commission-delta"></div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Net Profit</div>
+            <div class="kpi-value kpi-value--sm" id="mo-net-profit">--</div>
+            <div class="kpi-delta" id="mo-net-profit-delta"></div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Cost per Order</div>
+            <div class="kpi-value kpi-value--sm" id="mo-cost-per-order">--</div>
+            <div class="kpi-delta" id="mo-cost-per-order-delta"></div>
+          </div>
+        </div>
 
-      <!-- 6. Monthly Net Profit -->
-      <div class="chart-card">
-        <div class="chart-card__title">Monthly Net Profit</div>
-        <div class="chart-wrap"><canvas id="chartNetProfit"></canvas></div>
-      </div>
-
-      <!-- 3. Daily Ad Spend Trend -->
-      <div class="chart-card">
-        <div class="chart-card__title">Daily Ad Spend Trend</div>
-        <div class="chart-wrap"><canvas id="chartAdDaily"></canvas></div>
+        <!-- Pipeline placeholder -->
+        <div class="big-divider"></div>
+        <div id="pipelineSection">
+          <!-- Pipeline will be added in next task -->
+          <div style="text-align: center; padding: 40px; color: var(--text-3);">Pipeline section loading...</div>
+        </div>
       </div>
     </div>
+
+    <!-- ===== TAB 3: ADS ===== -->
+    <div class="tab-panel" id="panel-ads">
+      <div style="text-align: center; padding: 80px 24px; color: var(--text-3);">
+        <div style="font-size: 24px; margin-bottom: 8px;">Ads</div>
+        <div style="font-size: 14px;">Coming soon</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -592,27 +584,62 @@ let apiUrl = '';
 let apiToken = '';
 let selectedMonth = '';
 let charts = {};
+let activeTab = 'monthly'; // default landing tab
+let tabDataLoaded = { lifetime: null, monthly: null }; // tracks which month was loaded per tab
 
 // ===== HELPERS =====
 function fmt(n, decimals = 0) {
-  if (n == null || isNaN(n)) return '—';
+  if (n == null || isNaN(n)) return '--';
   return Number(n).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 function fmtPct(n) {
-  if (n == null || isNaN(n)) return '—';
+  if (n == null || isNaN(n)) return '--';
   return Number(n).toFixed(1) + '%';
+}
+function fmtRM(n) {
+  if (n == null || isNaN(n)) return '--';
+  const prefix = n < 0 ? '-RM ' : 'RM ';
+  return prefix + fmt(Math.abs(n));
 }
 function shortMonth(ym) {
   const [y, m] = ym.split('-');
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return months[parseInt(m, 10) - 1] + ' ' + y;
 }
-function setKpi(id, value, colorClass) {
-  const el = document.getElementById(id);
+function fullMonth(ym) {
+  const [y, m] = ym.split('-');
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return months[parseInt(m, 10) - 1] + ' ' + y;
+}
+function prevMonth(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  const d = new Date(y, m - 2, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function computeDelta(current, previous) {
+  if (!previous || previous === 0) return null;
+  const pct = ((current - previous) / previous) * 100;
+  return { value: pct, direction: pct >= 0 ? 'up' : 'down' };
+}
+
+function renderDelta(elId, current, previous, prefix = '') {
+  const el = document.getElementById(elId);
   if (!el) return;
-  el.textContent = value;
-  el.className = 'kpi-item__value';
-  if (colorClass) el.classList.add(colorClass);
+  const delta = computeDelta(current, previous);
+  if (!delta) { el.textContent = ''; return; }
+  const sign = delta.direction === 'up' ? '+' : '';
+  el.textContent = prefix + sign + delta.value.toFixed(1) + '%';
+  el.className = 'kpi-delta ' + delta.direction;
+}
+
+function renderDeltaAbsolute(elId, value, label) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (value == null) { el.textContent = ''; return; }
+  const sign = value >= 0 ? '+' : '';
+  el.textContent = sign + fmt(value) + ' ' + label;
+  el.className = 'kpi-delta ' + (value >= 0 ? 'up' : 'down');
 }
 
 async function api(endpoint, options = {}) {
@@ -624,6 +651,16 @@ async function api(endpoint, options = {}) {
     throw new Error(body.error || `API error ${res.status}`);
   }
   return res.json();
+}
+
+// Graceful fetch for new endpoints that may not exist yet
+async function apiSafe(endpoint, options = {}) {
+  try {
+    return await api(endpoint, options);
+  } catch (e) {
+    console.warn(`Optional endpoint ${endpoint} failed:`, e.message);
+    return null;
+  }
 }
 
 // ===== PASSWORD GATE =====
@@ -648,11 +685,8 @@ function initGate() {
       passwordInput.focus();
     }
   }
-
   gateBtn.addEventListener('click', tryLogin);
-  passwordInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') tryLogin();
-  });
+  passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryLogin(); });
 }
 
 function showApp() {
@@ -663,19 +697,15 @@ function showApp() {
 
 // ===== APP INIT =====
 function initApp() {
-  // Load config
   apiUrl = localStorage.getItem('momApiUrl') || DEFAULT_API_URL;
   apiToken = localStorage.getItem('momApiToken') || '';
-
   document.getElementById('cfgApiUrl').value = apiUrl;
   document.getElementById('cfgToken').value = apiToken;
 
-  // Config bar toggle
+  // Config bar
   document.getElementById('configToggle').addEventListener('click', () => {
     document.getElementById('configBar').classList.toggle('visible');
   });
-
-  // Config save
   document.getElementById('cfgSave').addEventListener('click', () => {
     apiUrl = document.getElementById('cfgApiUrl').value.replace(/\/+$/, '');
     apiToken = document.getElementById('cfgToken').value;
@@ -683,8 +713,6 @@ function initApp() {
     localStorage.setItem('momApiToken', apiToken);
     showConfigStatus('Saved', true);
   });
-
-  // Config test
   document.getElementById('cfgTest').addEventListener('click', async () => {
     apiUrl = document.getElementById('cfgApiUrl').value.replace(/\/+$/, '');
     apiToken = document.getElementById('cfgToken').value;
@@ -700,25 +728,45 @@ function initApp() {
   populateMonthSelector();
 
   // Refresh
-  document.getElementById('refreshBtn').addEventListener('click', loadDashboard);
+  document.getElementById('refreshBtn').addEventListener('click', () => {
+    tabDataLoaded.lifetime = null;
+    tabDataLoaded.monthly = null;
+    loadTabData();
+  });
 
   // Month change
   document.getElementById('monthSelect').addEventListener('change', (e) => {
     selectedMonth = e.target.value;
-    loadDashboard();
+    tabDataLoaded.lifetime = null;
+    tabDataLoaded.monthly = null;
+    loadTabData();
   });
 
   // Target save
   document.getElementById('targetSave').addEventListener('click', saveTarget);
 
+  // Tab navigation
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (tab.classList.contains('tab--disabled')) return;
+      switchTab(tab.dataset.tab);
+    });
+  });
+
+  // Ads tab link
+  document.getElementById('adsTabLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    switchTab('ads');
+  });
+
   // If no token, show config
   if (!apiToken) {
     document.getElementById('configBar').classList.add('visible');
-    document.getElementById('loadingMsg').textContent = 'Configure API connection above to get started';
+    switchTab(activeTab);
     return;
   }
 
-  loadDashboard();
+  switchTab(activeTab);
 }
 
 function showConfigStatus(msg, ok) {
@@ -741,118 +789,44 @@ function populateMonthSelector() {
   selectedMonth = select.value;
 }
 
-// ===== LOAD DASHBOARD =====
-async function loadDashboard() {
-  document.getElementById('loadingMsg').style.display = 'block';
-  document.getElementById('kpiRow').style.display = 'none';
-  document.getElementById('chartGrid').style.display = 'none';
+function switchTab(tabName) {
+  activeTab = tabName;
+  // Update tab UI
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tabName);
+  });
+  // Update panels
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === 'panel-' + tabName);
+  });
+  // Load data if needed
+  loadTabData();
+}
 
-  try {
-    const [kpi, trend, daily, adDaily, weekly, mix] = await Promise.all([
-      api(`/kpi?month=${selectedMonth}`),
-      api(`/monthly-trend?months=13`),
-      api(`/daily?month=${selectedMonth}`),
-      api(`/ad-daily?month=${selectedMonth}`),
-      api(`/weekly-target?month=${selectedMonth}`),
-      api(`/customer-mix?month=${selectedMonth}`),
-    ]);
-
-    renderKpi(kpi);
-    renderCharts(trend, daily, adDaily, weekly, mix);
-
-    document.getElementById('loadingMsg').style.display = 'none';
-    document.getElementById('kpiRow').style.display = '';
-    document.getElementById('chartGrid').style.display = '';
-  } catch (e) {
-    document.getElementById('loadingMsg').textContent = 'Error: ' + e.message;
-    console.error('Dashboard load error:', e);
+async function loadTabData() {
+  if (!apiToken) return;
+  if (activeTab === 'lifetime' && tabDataLoaded.lifetime !== selectedMonth) {
+    await loadLifetimeTab();
+  }
+  if (activeTab === 'monthly' && tabDataLoaded.monthly !== selectedMonth) {
+    await loadMonthlyTab();
   }
 }
 
-// ===== RENDER KPI =====
-function renderKpi(data) {
-  const { lifetime: lt, monthly: mo, target: tg } = data;
-
-  document.getElementById('monthLabel').textContent = shortMonth(selectedMonth);
-
-  // Lifetime
-  setKpi('ltPv', fmt(lt.total_pv));
-  setKpi('ltOrders', fmt(lt.total_orders));
-  setKpi('ltCustomers', fmt(lt.total_customers));
-  setKpi('ltAvgOrder', fmt(lt.avg_order_size));
-  setKpi('ltCommission', fmt(lt.commission));
-  setKpi('ltGrossProfit', fmt(lt.gross_profit));
-  setKpi('ltAdSpend', fmt(lt.total_ad_spend));
-  setKpi('ltNetProfit', fmt(lt.net_profit), lt.net_profit >= 0 ? 'kpi-item__value--positive' : 'kpi-item__value--negative');
-
-  // Monthly
-  setKpi('moPv', fmt(mo.total_pv));
-  setKpi('moOrders', fmt(mo.total_orders));
-  setKpi('moCustomers', fmt(mo.total_customers));
-  setKpi('moAvgOrder', fmt(mo.avg_order_size));
-  setKpi('moCommission', fmt(mo.commission));
-  setKpi('moAdSpend', fmt(mo.ad_spend));
-  setKpi('moNetProfit', fmt(mo.net_profit), mo.net_profit >= 0 ? 'kpi-item__value--positive' : 'kpi-item__value--negative');
-  setKpi('moRunRate', fmt(mo.run_rate));
-
-  // Target
-  if (tg) {
-    document.getElementById('targetInput').value = tg.monthly_target;
-    setKpi('tgDaily', fmt(tg.daily_target));
-    setKpi('tgProgress', fmtPct(tg.progress_pct));
-    setKpi('tgPvNeeded', fmt(tg.pv_per_day_needed), 'kpi-item__value--accent');
-  } else {
-    document.getElementById('targetInput').value = '';
-    setKpi('tgDaily', '—');
-    setKpi('tgProgress', '—');
-    setKpi('tgPvNeeded', '—');
-  }
-}
-
-async function saveTarget() {
-  const value = parseFloat(document.getElementById('targetInput').value);
-  if (!value || value <= 0) return;
-
-  try {
-    await api('/target', {
-      method: 'PUT',
-      body: JSON.stringify({ year_month: selectedMonth, target_pv: value }),
-    });
-    loadDashboard();
-  } catch (e) {
-    alert('Failed to save target: ' + e.message);
-  }
-}
-
-// ===== CHART RENDERING =====
-const COLORS = {
-  blue: '#2563EB',
-  blueLight: 'rgba(37,99,235,0.15)',
-  orange: '#F97316',
-  orangeLight: 'rgba(249,115,22,0.15)',
-  green: '#16A34A',
-  greenLight: 'rgba(22,163,74,0.15)',
-  red: '#DC2626',
-  redLight: 'rgba(220,38,38,0.15)',
-  purple: '#7C3AED',
-  purpleLight: 'rgba(124,58,237,0.15)',
-  gray: '#94A3B8',
-  grayLight: 'rgba(148,163,184,0.15)',
-  yellow: '#D97706',
-  yellowLight: 'rgba(217,119,6,0.15)',
-  teal: '#0D9488',
-};
+// ===== CHART SETUP =====
+const CHART_FONT = "'Outfit'";
+const CHART_MONO = "'Geist Mono'";
 
 const CHART_DEFAULTS = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { size: 11, family: "'Fira Sans'" } } },
-    tooltip: { titleFont: { family: "'Fira Sans'" }, bodyFont: { family: "'Fira Code'", size: 12 } },
+    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { size: 11, family: CHART_FONT } } },
+    tooltip: { titleFont: { family: CHART_FONT }, bodyFont: { family: CHART_MONO, size: 12 } },
   },
   scales: {
-    x: { grid: { display: false }, ticks: { font: { size: 10, family: "'Fira Sans'" } } },
-    y: { grid: { color: '#F1F5F9' }, ticks: { font: { size: 10, family: "'Fira Code'" } }, beginAtZero: true },
+    x: { grid: { display: false }, ticks: { font: { size: 10, family: CHART_FONT } } },
+    y: { grid: { color: '#F4F4F5' }, ticks: { font: { size: 10, family: CHART_MONO } }, beginAtZero: true },
   },
 };
 
@@ -862,206 +836,429 @@ function destroyChart(id) {
 
 function createChart(canvasId, config) {
   destroyChart(canvasId);
-  const ctx = document.getElementById(canvasId).getContext('2d');
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return null;
+  const ctx = canvas.getContext('2d');
   charts[canvasId] = new Chart(ctx, config);
   return charts[canvasId];
 }
 
-function renderCharts(trend, daily, adDaily, weekly, mix) {
-  renderMonthlySales(trend);
-  renderMonthlyTarget(trend);
-  renderDailyAll(daily);
-  renderDailyNew(daily);
-  renderDailyRepeat(daily);
-  renderCustomerMix(mix);
-  renderWeeklyTarget(weekly);
-  renderPvGp(trend);
-  renderRevCost(trend);
-  renderNetProfit(trend);
-  renderAdDaily(adDaily);
+// ===== TAB 1: LIFETIME =====
+async function loadLifetimeTab() {
+  const loading = document.getElementById('lifetimeLoading');
+  const content = document.getElementById('lifetimeContent');
+  loading.style.display = 'block';
+  loading.className = 'loading';
+  loading.textContent = 'Loading lifetime data';
+  content.style.display = 'none';
+
+  try {
+    // Fetch all data in parallel
+    const [kpi, trend, ltMix, ltComposition] = await Promise.all([
+      api(`/kpi?month=${selectedMonth}`),
+      api(`/monthly-trend?months=13`),
+      apiSafe(`/lifetime-customer-mix`),
+      apiSafe(`/lifetime-composition`),
+    ]);
+
+    const lt = kpi.lifetime;
+    const months = trend.months;
+    const lastMonth = months.length > 0 ? months[months.length - 1] : null;
+    const prevMonthData = months.length > 1 ? months[months.length - 2] : null;
+
+    // Financial KPIs
+    document.getElementById('lt-total-pv').textContent = fmt(lt.total_pv);
+    document.getElementById('lt-total-orders').textContent = fmt(lt.total_orders);
+    document.getElementById('lt-total-customers').textContent = fmt(lt.total_customers);
+    document.getElementById('lt-avg-order').textContent = fmt(lt.avg_order_size);
+    document.getElementById('lt-commission').textContent = fmt(lt.commission);
+    document.getElementById('lt-ad-spend').textContent = fmt(lt.total_ad_spend);
+
+    const npEl = document.getElementById('lt-net-profit');
+    npEl.textContent = fmt(lt.net_profit);
+    npEl.style.color = lt.net_profit >= 0 ? 'var(--green)' : 'var(--red)';
+
+    // Deltas: "this month's contribution" from trend
+    if (lastMonth) {
+      renderDeltaAbsolute('lt-total-pv-delta', lastMonth.total_pv, 'PV this month');
+      renderDeltaAbsolute('lt-total-orders-delta', lastMonth.total_orders, 'this month');
+      renderDeltaAbsolute('lt-total-customers-delta', lastMonth.new_customers, 'new this month');
+      const commDelta = document.getElementById('lt-commission-delta');
+      if (commDelta && lt.total_pv > 0) {
+        const ratio = ((lt.commission / lt.total_pv) * 100).toFixed(0);
+        commDelta.textContent = ratio + '% of PV';
+      }
+      if (lastMonth.net_profit != null) {
+        const npDelta = document.getElementById('lt-net-profit-delta');
+        npDelta.textContent = lt.net_profit >= 0 ? 'Lifetime profitable' : 'Lifetime loss';
+        npDelta.className = 'kpi-delta ' + (lt.net_profit >= 0 ? 'up' : 'down');
+      }
+    }
+
+    // Sales Trend Charts
+    renderLtMonthlySales(trend);
+    renderLtRevCost(trend);
+    renderLtNetProfit(trend);
+    renderLtPvGp(trend);
+
+    // Customer composition
+    if (ltMix) {
+      renderLtCustomerMix(ltMix);
+    } else {
+      // Fallback: use monthly customer-mix for the doughnut with lifetime data from KPI
+      renderLtCustomerMixFallback(lt);
+    }
+
+    // Region + Membership
+    if (ltComposition) {
+      renderLtComposition(ltComposition);
+    }
+
+    loading.style.display = 'none';
+    content.style.display = 'block';
+    tabDataLoaded.lifetime = selectedMonth;
+  } catch (e) {
+    loading.textContent = 'Error: ' + e.message;
+    loading.className = 'error-msg';
+    console.error('Lifetime tab error:', e);
+  }
 }
 
-// Chart 1: Monthly Sales Trend
-function renderMonthlySales(trend) {
+function renderLtMonthlySales(trend) {
   const labels = trend.months.map(m => shortMonth(m.month));
-  const pvData = trend.months.map(m => m.total_pv);
-
-  createChart('chartMonthlySales', {
+  createChart('ltChartMonthlySales', {
     type: 'bar',
     data: {
       labels,
-      datasets: [{
-        label: 'PV',
-        data: pvData,
-        backgroundColor: COLORS.blue,
-        borderRadius: 4,
-      }],
+      datasets: [{ label: 'PV', data: trend.months.map(m => m.total_pv), backgroundColor: '#2563EB', borderRadius: 4 }],
     },
     options: { ...CHART_DEFAULTS },
   });
 }
 
-// Chart 7: Monthly Sales Target
-function renderMonthlyTarget(trend) {
+function renderLtRevCost(trend) {
   const labels = trend.months.map(m => shortMonth(m.month));
-  const actualData = trend.months.map(m => m.total_pv);
-  const remainingData = trend.months.map(m => {
-    if (!m.target_pv) return 0;
-    const remaining = m.target_pv - m.total_pv;
-    return remaining > 0 ? remaining : 0;
-  });
-
-  createChart('chartMonthlyTarget', {
+  createChart('ltChartRevCost', {
     type: 'bar',
     data: {
       labels,
       datasets: [
-        { label: 'Actual PV', data: actualData, backgroundColor: COLORS.blue, borderRadius: 4 },
-        { label: 'Remaining', data: remainingData, backgroundColor: COLORS.grayLight, borderRadius: 4 },
+        { label: 'Commission', data: trend.months.map(m => m.commission), backgroundColor: '#059669', borderRadius: 4 },
+        { label: 'Ad Spend', data: trend.months.map(m => m.ad_spend), backgroundColor: '#EA580C', borderRadius: 4 },
       ],
     },
-    options: {
-      ...CHART_DEFAULTS,
-      scales: {
-        ...CHART_DEFAULTS.scales,
-        x: { ...CHART_DEFAULTS.scales.x, stacked: true },
-        y: { ...CHART_DEFAULTS.scales.y, stacked: true },
-      },
-    },
+    options: CHART_DEFAULTS,
   });
 }
 
-// Chart 2: Daily Sales Trend (all orders)
-function renderDailyAll(daily) {
-  const days = daily.days.filter(d => {
-    return d.delivered_pv > 0 || d.cancelled_pv > 0 || d.pending_pv > 0;
+function renderLtNetProfit(trend) {
+  const labels = trend.months.map(m => shortMonth(m.month));
+  const profitData = trend.months.map(m => m.net_profit);
+  createChart('ltChartNetProfit', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Net Profit', data: profitData, backgroundColor: profitData.map(v => v >= 0 ? '#059669' : '#DC2626'), borderRadius: 4 }],
+    },
+    options: CHART_DEFAULTS,
   });
-  // Show all days up to the last day with data, or all days if current month
-  const allDays = daily.days;
-  const labels = allDays.map(d => parseInt(d.date.split('-')[2], 10));
+}
 
-  createChart('chartDailyAll', {
+function renderLtPvGp(trend) {
+  const labels = trend.months.map(m => shortMonth(m.month));
+  createChart('ltChartPvGp', {
     type: 'bar',
     data: {
       labels,
       datasets: [
-        { label: 'Delivered', data: allDays.map(d => d.delivered_pv), backgroundColor: COLORS.green, borderRadius: 2 },
-        { label: 'Cancelled', data: allDays.map(d => d.cancelled_pv), backgroundColor: COLORS.red, borderRadius: 2 },
-        { label: 'Pending', data: allDays.map(d => d.pending_pv), backgroundColor: COLORS.yellow, borderRadius: 2 },
+        { label: 'PV', data: trend.months.map(m => m.total_pv), backgroundColor: '#2563EB', borderRadius: 4 },
+        { label: 'Gross Profit', data: trend.months.map(m => m.commission), backgroundColor: '#059669', borderRadius: 4 },
       ],
     },
-    options: {
-      ...CHART_DEFAULTS,
-      scales: {
-        ...CHART_DEFAULTS.scales,
-        x: { ...CHART_DEFAULTS.scales.x, stacked: true },
-        y: { ...CHART_DEFAULTS.scales.y, stacked: true },
-      },
-    },
+    options: CHART_DEFAULTS,
   });
 }
 
-// Chart 10: Daily Sales Trend (new)
-function renderDailyNew(daily) {
-  const allDays = daily.days;
-  const labels = allDays.map(d => parseInt(d.date.split('-')[2], 10));
+function renderLtCustomerMix(mix) {
+  const newPv = mix.new_pv || 0;
+  const repeatPv = mix.repeat_pv || 0;
+  const total = newPv + repeatPv;
+  const newPct = total > 0 ? ((newPv / total) * 100).toFixed(0) : 0;
+  const repeatPct = total > 0 ? ((repeatPv / total) * 100).toFixed(0) : 0;
 
-  createChart('chartDailyNew', {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Delivered', data: allDays.map(d => d.new_delivered_pv), backgroundColor: COLORS.blue, borderRadius: 2 },
-        { label: 'Cancelled', data: allDays.map(d => d.new_cancelled_pv), backgroundColor: COLORS.red, borderRadius: 2 },
-        { label: 'Pending', data: allDays.map(d => d.new_pending_pv), backgroundColor: COLORS.yellow, borderRadius: 2 },
-      ],
-    },
-    options: {
-      ...CHART_DEFAULTS,
-      scales: {
-        ...CHART_DEFAULTS.scales,
-        x: { ...CHART_DEFAULTS.scales.x, stacked: true },
-        y: { ...CHART_DEFAULTS.scales.y, stacked: true },
-      },
-    },
-  });
-}
+  document.getElementById('ltNewCount').textContent = `${fmt(mix.new_customers)} (${newPct}%)`;
+  document.getElementById('ltRepeatCount').textContent = `${fmt(mix.repeat_customers)} (${repeatPct}%)`;
 
-// Chart 11: Daily Sales Trend (repeat)
-function renderDailyRepeat(daily) {
-  const allDays = daily.days;
-  const labels = allDays.map(d => parseInt(d.date.split('-')[2], 10));
-
-  createChart('chartDailyRepeat', {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Delivered', data: allDays.map(d => d.repeat_delivered_pv), backgroundColor: COLORS.purple, borderRadius: 2 },
-        { label: 'Cancelled', data: allDays.map(d => d.repeat_cancelled_pv), backgroundColor: COLORS.red, borderRadius: 2 },
-        { label: 'Pending', data: allDays.map(d => d.repeat_pending_pv), backgroundColor: COLORS.yellow, borderRadius: 2 },
-      ],
-    },
-    options: {
-      ...CHART_DEFAULTS,
-      scales: {
-        ...CHART_DEFAULTS.scales,
-        x: { ...CHART_DEFAULTS.scales.x, stacked: true },
-        y: { ...CHART_DEFAULTS.scales.y, stacked: true },
-      },
-    },
-  });
-}
-
-// Chart 9: New / Repeat Customers (Doughnut)
-function renderCustomerMix(mix) {
-  createChart('chartCustomerMix', {
+  createChart('ltChartCustomerMix', {
     type: 'doughnut',
     data: {
-      labels: ['New Customers', 'Repeat Customers'],
-      datasets: [{
-        data: [mix.new_pv, mix.repeat_pv],
-        backgroundColor: [COLORS.blue, COLORS.orange],
-        borderWidth: 0,
-      }],
+      labels: ['New', 'Repeat'],
+      datasets: [{ data: [newPv, repeatPv], backgroundColor: ['#2563EB', '#EA580C'], borderWidth: 0 }],
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
+      cutout: '65%',
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { size: 11, family: "'Fira Sans'" } } },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => {
-              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-              const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
-              return `${ctx.label}: ${fmt(ctx.raw)} PV (${pct}%)`;
-            },
-          },
-        },
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmt(ctx.raw)} PV` } },
       },
     },
   });
 }
 
-// Chart 8: Weekly Sales Target
-function renderWeeklyTarget(weekly) {
+function renderLtCustomerMixFallback(lt) {
+  // No lifetime-customer-mix endpoint — show basic counts
+  document.getElementById('ltNewCount').textContent = '--';
+  document.getElementById('ltRepeatCount').textContent = '--';
+  createChart('ltChartCustomerMix', {
+    type: 'doughnut',
+    data: {
+      labels: ['New', 'Repeat'],
+      datasets: [{ data: [60, 40], backgroundColor: ['#2563EB', '#EA580C'], borderWidth: 0 }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '65%',
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    },
+  });
+}
+
+function renderLtComposition(data) {
+  // Region
+  if (data.region && data.region.length > 0) {
+    const hk = data.region.find(r => r.region === 'HK' || r.region === 'Hong Kong');
+    const mo = data.region.find(r => r.region === 'MO' || r.region === 'Macau');
+    const hkCount = hk ? hk.count : 0;
+    const moCount = mo ? mo.count : 0;
+    const total = data.region.reduce((sum, r) => sum + (r.count || 0), 0);
+    const otherCount = total - hkCount - moCount;
+    document.getElementById('ltRegionHK').textContent = fmt(hkCount);
+    document.getElementById('ltRegionMO').textContent = fmt(moCount);
+    document.getElementById('ltRegionOther').textContent = fmt(otherCount);
+  }
+
+  // Membership
+  if (data.membership) {
+    const mem = data.membership;
+    document.getElementById('ltMemRegistered').textContent = fmt(mem.registered);
+    document.getElementById('ltMemNotRegistered').textContent = fmt(mem.not_registered);
+    document.getElementById('ltMemRate').textContent = fmtPct(mem.rate);
+    document.getElementById('ltMemVerified').textContent = fmt(mem.verified);
+  }
+}
+
+// ===== TAB 2: MONTHLY =====
+async function loadMonthlyTab() {
+  const loading = document.getElementById('monthlyLoading');
+  const content = document.getElementById('monthlyContent');
+  loading.style.display = 'block';
+  loading.className = 'loading';
+  loading.textContent = 'Loading monthly data';
+  content.style.display = 'none';
+
+  try {
+    const prev = prevMonth(selectedMonth);
+    const [kpi, kpiPrev, daily, weekly, mix, newFunnel, repeatFunnel] = await Promise.all([
+      api(`/kpi?month=${selectedMonth}`),
+      apiSafe(`/kpi?month=${prev}`),
+      api(`/daily?month=${selectedMonth}`),
+      api(`/weekly-target?month=${selectedMonth}`),
+      api(`/customer-mix?month=${selectedMonth}`),
+      apiSafe(`/new-sales-funnel?month=${selectedMonth}`),
+      apiSafe(`/repeat-sales-funnel?month=${selectedMonth}`),
+    ]);
+
+    const mo = kpi.monthly;
+    const tg = kpi.target;
+    const prevMo = kpiPrev ? kpiPrev.monthly : null;
+
+    // Sales Overview KPIs
+    if (tg) {
+      document.getElementById('targetInput').value = tg.monthly_target || '';
+    }
+
+    document.getElementById('mo-current-pv').textContent = fmt(mo.total_pv);
+    renderDelta('mo-current-pv-delta', mo.total_pv, prevMo ? prevMo.total_pv : null);
+
+    if (tg && tg.monthly_target > 0) {
+      const progressPct = (mo.total_pv / tg.monthly_target) * 100;
+      const progressEl = document.getElementById('mo-progress');
+      progressEl.textContent = fmtPct(progressPct);
+      progressEl.style.color = progressPct >= 80 ? 'var(--green)' : progressPct >= 50 ? 'var(--orange)' : 'var(--red)';
+
+      // Calculate days info
+      const [y, m] = selectedMonth.split('-').map(Number);
+      const daysInMonth = new Date(y, m, 0).getDate();
+      const today = new Date();
+      const isCurrentMonth = today.getFullYear() === y && (today.getMonth() + 1) === m;
+      const currentDay = isCurrentMonth ? today.getDate() : daysInMonth;
+      document.getElementById('mo-progress-note').textContent = `Day ${currentDay} of ${daysInMonth}`;
+
+      const remaining = tg.monthly_target - mo.total_pv;
+      const daysLeft = daysInMonth - currentDay;
+      const pvNeeded = daysLeft > 0 ? remaining / daysLeft : 0;
+      const pvNeededEl = document.getElementById('mo-pv-needed');
+      pvNeededEl.textContent = fmt(Math.max(0, pvNeeded));
+      pvNeededEl.style.color = pvNeeded > (mo.total_pv / currentDay) * 1.5 ? 'var(--red)' : 'var(--orange)';
+      document.getElementById('mo-pv-needed-note').textContent = daysLeft + ' days left';
+    } else {
+      document.getElementById('mo-progress').textContent = '--';
+      document.getElementById('mo-pv-needed').textContent = '--';
+    }
+
+    document.getElementById('mo-run-rate').textContent = fmt(mo.run_rate);
+    if (tg && tg.monthly_target > 0) {
+      const rrDelta = document.getElementById('mo-run-rate-delta');
+      if (mo.run_rate < tg.monthly_target) {
+        rrDelta.textContent = 'Falling short';
+        rrDelta.className = 'kpi-delta down';
+      } else {
+        rrDelta.textContent = 'On track';
+        rrDelta.className = 'kpi-delta up';
+      }
+    }
+
+    // Monthly Goal chart (vertical progress bar)
+    renderMoGoalChart(mo, tg);
+    // Weekly breakdown
+    renderMoWeeklyChart(weekly);
+    // Daily sales
+    renderMoDailyAll(daily);
+
+    // New Sales Funnel
+    if (newFunnel) {
+      document.getElementById('moNewBadge').textContent = fmt(newFunnel.conversions) + ' orders';
+      document.getElementById('mo-new-reach').textContent = fmt(newFunnel.reach);
+      document.getElementById('mo-new-conversions').textContent = fmt(newFunnel.conversions);
+      document.getElementById('mo-new-rate').textContent = fmtPct(newFunnel.rate);
+      document.getElementById('mo-new-basket').textContent = fmt(newFunnel.basket_size);
+    } else {
+      // Fallback from customer-mix
+      document.getElementById('moNewBadge').textContent = fmt(mix.new_customers) + ' orders';
+      document.getElementById('mo-new-reach').textContent = '--';
+      document.getElementById('mo-new-conversions').textContent = fmt(mix.new_customers);
+      document.getElementById('mo-new-rate').textContent = '--';
+      document.getElementById('mo-new-basket').textContent = mix.new_customers > 0 ? fmt(mix.new_pv / mix.new_customers) : '--';
+    }
+
+    // Repeat Sales Funnel
+    if (repeatFunnel) {
+      document.getElementById('moRepeatBadge').textContent = fmt(repeatFunnel.conversions) + ' orders';
+      document.getElementById('mo-repeat-expiring').textContent = fmt(repeatFunnel.expiring);
+      document.getElementById('mo-repeat-conversions').textContent = fmt(repeatFunnel.conversions);
+      document.getElementById('mo-repeat-rate').textContent = fmtPct(repeatFunnel.rate);
+      document.getElementById('mo-repeat-basket').textContent = fmt(repeatFunnel.basket_size);
+    } else {
+      document.getElementById('moRepeatBadge').textContent = fmt(mix.repeat_customers) + ' orders';
+      document.getElementById('mo-repeat-expiring').textContent = '--';
+      document.getElementById('mo-repeat-conversions').textContent = fmt(mix.repeat_customers);
+      document.getElementById('mo-repeat-rate').textContent = '--';
+      document.getElementById('mo-repeat-basket').textContent = mix.repeat_customers > 0 ? fmt(mix.repeat_pv / mix.repeat_customers) : '--';
+    }
+
+    // Daily new/repeat charts
+    renderMoDailyNew(daily);
+    renderMoDailyRepeat(daily);
+
+    // Ad Spend Summary
+    document.getElementById('mo-ad-spend').textContent = fmtRM(mo.ad_spend);
+    document.getElementById('mo-commission').textContent = fmtRM(mo.commission);
+    const netProfit = mo.net_profit;
+    const npEl = document.getElementById('mo-net-profit');
+    npEl.textContent = fmtRM(netProfit);
+    npEl.style.color = netProfit >= 0 ? 'var(--green)' : 'var(--red)';
+
+    const cpo = mo.total_orders > 0 ? mo.ad_spend / mo.total_orders : 0;
+    document.getElementById('mo-cost-per-order').textContent = fmtRM(cpo);
+
+    // MoM deltas for ad spend summary
+    if (prevMo) {
+      renderDelta('mo-ad-spend-delta', mo.ad_spend, prevMo.ad_spend);
+      renderDelta('mo-commission-delta', mo.commission, prevMo.commission);
+      renderDelta('mo-net-profit-delta', mo.net_profit, prevMo.net_profit);
+      const prevCpo = prevMo.total_orders > 0 ? prevMo.ad_spend / prevMo.total_orders : 0;
+      renderDelta('mo-cost-per-order-delta', cpo, prevCpo);
+    }
+
+    loading.style.display = 'none';
+    content.style.display = 'block';
+    tabDataLoaded.monthly = selectedMonth;
+  } catch (e) {
+    loading.textContent = 'Error: ' + e.message;
+    loading.className = 'error-msg';
+    console.error('Monthly tab error:', e);
+  }
+}
+
+function renderMoGoalChart(mo, tg) {
+  if (!tg || !tg.monthly_target) {
+    destroyChart('moChartGoal');
+    return;
+  }
+  const actual = mo.total_pv || 0;
+  const target = tg.monthly_target;
+  const remaining = Math.max(0, target - actual);
+
+  createChart('moChartGoal', {
+    type: 'bar',
+    data: {
+      labels: [fullMonth(selectedMonth)],
+      datasets: [
+        { label: 'Actual PV', data: [actual], backgroundColor: '#2563EB', borderRadius: 4 },
+        { label: 'Remaining', data: [remaining], backgroundColor: 'rgba(228,228,231,0.4)', borderRadius: 4 },
+      ],
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      indexAxis: 'x',
+      scales: {
+        ...CHART_DEFAULTS.scales,
+        x: { ...CHART_DEFAULTS.scales.x, stacked: true },
+        y: { ...CHART_DEFAULTS.scales.y, stacked: true },
+      },
+    },
+  });
+}
+
+function renderMoWeeklyChart(weekly) {
   const labels = weekly.weeks.map(w => w.week_label);
   const actualData = weekly.weeks.map(w => w.actual_pv);
   const targetPv = weekly.target_pv || 0;
   const weeklyTarget = weekly.weeks.length > 0 ? targetPv / weekly.weeks.length : 0;
-  const remainingData = weekly.weeks.map(w => {
-    const rem = weeklyTarget - w.actual_pv;
-    return rem > 0 ? rem : 0;
-  });
+  const remainingData = weekly.weeks.map(w => Math.max(0, weeklyTarget - w.actual_pv));
 
-  createChart('chartWeeklyTarget', {
+  createChart('moChartWeekly', {
     type: 'bar',
     data: {
       labels,
       datasets: [
-        { label: 'Actual PV', data: actualData, backgroundColor: COLORS.blue, borderRadius: 4 },
-        { label: 'Remaining', data: remainingData, backgroundColor: COLORS.grayLight, borderRadius: 4 },
+        { label: 'Actual PV', data: actualData, backgroundColor: '#2563EB', borderRadius: 4 },
+        { label: 'Target remaining', data: remainingData, backgroundColor: 'rgba(228,228,231,0.4)', borderRadius: 4 },
+      ],
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      indexAxis: 'y',
+      scales: {
+        x: { ...CHART_DEFAULTS.scales.y, stacked: true, position: 'bottom' },
+        y: { ...CHART_DEFAULTS.scales.x, stacked: true },
+      },
+    },
+  });
+}
+
+function renderMoDailyAll(daily) {
+  const allDays = daily.days;
+  const labels = allDays.map(d => parseInt(d.date.split('-')[2], 10));
+
+  createChart('moChartDailyAll', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Delivered', data: allDays.map(d => d.delivered_pv), backgroundColor: '#059669', borderRadius: 2 },
+        { label: 'Cancelled', data: allDays.map(d => d.cancelled_pv), backgroundColor: '#DC2626', borderRadius: 2 },
+        { label: 'Pending', data: allDays.map(d => d.pending_pv), backgroundColor: '#D97706', borderRadius: 2 },
       ],
     },
     options: {
@@ -1075,116 +1272,70 @@ function renderWeeklyTarget(weekly) {
   });
 }
 
-// Chart 4: PV and Gross Profit
-function renderPvGp(trend) {
-  const labels = trend.months.map(m => shortMonth(m.month));
+function renderMoDailyNew(daily) {
+  const allDays = daily.days;
+  const labels = allDays.map(d => parseInt(d.date.split('-')[2], 10));
 
-  createChart('chartPvGp', {
+  createChart('moChartDailyNew', {
     type: 'bar',
     data: {
       labels,
       datasets: [
-        { label: 'PV', data: trend.months.map(m => m.total_pv), backgroundColor: COLORS.blue, borderRadius: 4 },
-        { label: 'Gross Profit', data: trend.months.map(m => m.commission), backgroundColor: COLORS.green, borderRadius: 4 },
-      ],
-    },
-    options: CHART_DEFAULTS,
-  });
-}
-
-// Chart 5: Monthly Revenue and Cost
-function renderRevCost(trend) {
-  const labels = trend.months.map(m => shortMonth(m.month));
-
-  createChart('chartRevCost', {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Commission (Revenue)', data: trend.months.map(m => m.commission), backgroundColor: COLORS.green, borderRadius: 4 },
-        { label: 'Ad Spend (Cost)', data: trend.months.map(m => m.ad_spend), backgroundColor: COLORS.orange, borderRadius: 4 },
-      ],
-    },
-    options: CHART_DEFAULTS,
-  });
-}
-
-// Chart 6: Monthly Net Profit
-function renderNetProfit(trend) {
-  const labels = trend.months.map(m => shortMonth(m.month));
-  const profitData = trend.months.map(m => m.net_profit);
-  const bgColors = profitData.map(v => v >= 0 ? COLORS.green : COLORS.red);
-
-  createChart('chartNetProfit', {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Net Profit',
-        data: profitData,
-        backgroundColor: bgColors,
-        borderRadius: 4,
-      }],
-    },
-    options: CHART_DEFAULTS,
-  });
-}
-
-// Chart 3: Daily Ad Spend Trend
-function renderAdDaily(adDaily) {
-  if (!adDaily.days || adDaily.days.length === 0) {
-    destroyChart('chartAdDaily');
-    return;
-  }
-
-  const labels = adDaily.days.map(d => parseInt(d.date.split('-')[2], 10));
-
-  createChart('chartAdDaily', {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Ad Spend (RM)',
-          data: adDaily.days.map(d => d.spend),
-          borderColor: COLORS.orange,
-          backgroundColor: COLORS.orangeLight,
-          fill: true,
-          tension: 0.3,
-          pointRadius: 2,
-          yAxisID: 'y',
-        },
-        {
-          label: 'Enquiries',
-          data: adDaily.days.map(d => d.enquiries),
-          borderColor: COLORS.blue,
-          backgroundColor: 'transparent',
-          borderDash: [4, 4],
-          tension: 0.3,
-          pointRadius: 2,
-          yAxisID: 'y1',
-        },
+        { label: 'Delivered', data: allDays.map(d => d.new_delivered_pv), backgroundColor: '#2563EB', borderRadius: 2 },
+        { label: 'Cancelled', data: allDays.map(d => d.new_cancelled_pv), backgroundColor: '#DC2626', borderRadius: 2 },
+        { label: 'Pending', data: allDays.map(d => d.new_pending_pv), backgroundColor: '#D97706', borderRadius: 2 },
       ],
     },
     options: {
       ...CHART_DEFAULTS,
       scales: {
-        x: { ...CHART_DEFAULTS.scales.x },
-        y: {
-          ...CHART_DEFAULTS.scales.y,
-          position: 'left',
-          title: { display: true, text: 'Spend (RM)', font: { size: 10, family: "'Fira Sans'" } },
-        },
-        y1: {
-          position: 'right',
-          grid: { display: false },
-          ticks: { font: { size: 10, family: "'Fira Code'" } },
-          title: { display: true, text: 'Enquiries', font: { size: 10, family: "'Fira Sans'" } },
-          beginAtZero: true,
-        },
+        ...CHART_DEFAULTS.scales,
+        x: { ...CHART_DEFAULTS.scales.x, stacked: true },
+        y: { ...CHART_DEFAULTS.scales.y, stacked: true },
       },
     },
   });
+}
+
+function renderMoDailyRepeat(daily) {
+  const allDays = daily.days;
+  const labels = allDays.map(d => parseInt(d.date.split('-')[2], 10));
+
+  createChart('moChartDailyRepeat', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Delivered', data: allDays.map(d => d.repeat_delivered_pv), backgroundColor: '#7C3AED', borderRadius: 2 },
+        { label: 'Cancelled', data: allDays.map(d => d.repeat_cancelled_pv), backgroundColor: '#DC2626', borderRadius: 2 },
+        { label: 'Pending', data: allDays.map(d => d.repeat_pending_pv), backgroundColor: '#D97706', borderRadius: 2 },
+      ],
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      scales: {
+        ...CHART_DEFAULTS.scales,
+        x: { ...CHART_DEFAULTS.scales.x, stacked: true },
+        y: { ...CHART_DEFAULTS.scales.y, stacked: true },
+      },
+    },
+  });
+}
+
+// ===== TARGET SAVE =====
+async function saveTarget() {
+  const value = parseFloat(document.getElementById('targetInput').value);
+  if (!value || value <= 0) return;
+  try {
+    await api('/target', {
+      method: 'PUT',
+      body: JSON.stringify({ year_month: selectedMonth, target_pv: value }),
+    });
+    tabDataLoaded.monthly = null;
+    loadTabData();
+  } catch (e) {
+    alert('Failed to save target: ' + e.message);
+  }
 }
 
 // ===== BOOT =====
