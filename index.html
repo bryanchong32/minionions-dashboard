@@ -537,31 +537,7 @@
             </div>
           </div>
 
-          <!-- Region breakdown -->
-          <div class="mini-card" id="ltRegionCard">
-            <div class="mini-header">
-              <div class="section-dot" style="background: var(--teal);"></div>
-              Region Breakdown
-            </div>
-            <div class="mini-body mini-body--3" id="ltRegionBody">
-              <div class="mini-cell">
-                <div class="mini-count" style="color: var(--accent);" id="ltRegionHK">--</div>
-                <div class="mini-label">Hong Kong</div>
-              </div>
-              <div class="mini-cell">
-                <div class="mini-count" style="color: var(--purple);" id="ltRegionMO">--</div>
-                <div class="mini-label">Macau</div>
-              </div>
-              <div class="mini-cell">
-                <div class="mini-count" style="color: var(--text-3);" id="ltRegionOther">--</div>
-                <div class="mini-label">Other</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Membership + PV/GP -->
-        <div class="mini-row" style="margin-top: 12px;">
+          <!-- Membership Status -->
           <div class="mini-card" id="ltMembershipCard">
             <div class="mini-header">
               <div class="section-dot" style="background: var(--green);"></div>
@@ -586,11 +562,6 @@
               </div>
             </div>
           </div>
-
-          <div class="chart-area" style="margin-top: 0;">
-            <div class="chart-label">PV and Gross Profit</div>
-            <div class="chart-wrap chart-wrap--sm"><canvas id="ltChartPvGp"></canvas></div>
-          </div>
         </div>
       </div>
     </div>
@@ -600,8 +571,39 @@
       <div id="monthlyLoading" class="loading">Loading monthly data</div>
       <div id="monthlyContent" style="display:none;">
 
-        <!-- Sales Overview -->
+        <!-- Ad Spend Summary (top — funnel logic: ads > sales > follow-up) -->
         <div class="section-header" style="margin-top: 0;">
+          <div class="section-dot" style="background: var(--text-3);"></div>
+          <div class="section-label">Ad Spend Summary</div>
+          <div class="section-line"></div>
+          <div class="section-note"><a href="#" id="adsTabLink">Full detail in Ads tab</a></div>
+        </div>
+
+        <div class="kpi-row kpi-row--4">
+          <div class="kpi-cell">
+            <div class="kpi-label">Ad Spend</div>
+            <div class="kpi-value kpi-value--sm" id="mo-ad-spend">--</div>
+            <div class="kpi-delta" id="mo-ad-spend-delta"></div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Commission</div>
+            <div class="kpi-value kpi-value--sm" id="mo-commission">--</div>
+            <div class="kpi-delta" id="mo-commission-delta"></div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Net Profit</div>
+            <div class="kpi-value kpi-value--sm" id="mo-net-profit">--</div>
+            <div class="kpi-delta" id="mo-net-profit-delta"></div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-label">Cost per Order</div>
+            <div class="kpi-value kpi-value--sm" id="mo-cost-per-order">--</div>
+            <div class="kpi-delta" id="mo-cost-per-order-delta"></div>
+          </div>
+        </div>
+
+        <!-- Sales Overview -->
+        <div class="section-header">
           <div class="section-dot" style="background: var(--accent);"></div>
           <div class="section-label">Sales Overview</div>
           <div class="section-line"></div>
@@ -638,7 +640,7 @@
           </div>
         </div>
 
-        <div class="split">
+        <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 12px; margin-top: 12px;">
           <div class="chart-area" style="margin-top: 0;">
             <div class="chart-label">Monthly Goal</div>
             <div class="chart-wrap chart-wrap--sm"><canvas id="moChartGoal"></canvas></div>
@@ -722,37 +724,6 @@
               <div class="chart-label">Daily repeat orders</div>
               <div class="chart-wrap chart-wrap--sm"><canvas id="moChartDailyRepeat"></canvas></div>
             </div>
-          </div>
-        </div>
-
-        <!-- Ad Spend Summary -->
-        <div class="section-header">
-          <div class="section-dot" style="background: var(--text-3);"></div>
-          <div class="section-label">Ad Spend Summary</div>
-          <div class="section-line"></div>
-          <div class="section-note"><a href="#" id="adsTabLink">Full detail in Ads tab</a></div>
-        </div>
-
-        <div class="kpi-row kpi-row--4">
-          <div class="kpi-cell">
-            <div class="kpi-label">Ad Spend</div>
-            <div class="kpi-value kpi-value--sm" id="mo-ad-spend">--</div>
-            <div class="kpi-delta" id="mo-ad-spend-delta"></div>
-          </div>
-          <div class="kpi-cell">
-            <div class="kpi-label">Commission</div>
-            <div class="kpi-value kpi-value--sm" id="mo-commission">--</div>
-            <div class="kpi-delta" id="mo-commission-delta"></div>
-          </div>
-          <div class="kpi-cell">
-            <div class="kpi-label">Net Profit</div>
-            <div class="kpi-value kpi-value--sm" id="mo-net-profit">--</div>
-            <div class="kpi-delta" id="mo-net-profit-delta"></div>
-          </div>
-          <div class="kpi-cell">
-            <div class="kpi-label">Cost per Order</div>
-            <div class="kpi-value kpi-value--sm" id="mo-cost-per-order">--</div>
-            <div class="kpi-delta" id="mo-cost-per-order-delta"></div>
           </div>
         </div>
 
@@ -1147,7 +1118,6 @@ async function loadLifetimeTab() {
     renderLtMonthlySales(trend);
     renderLtRevCost(trend);
     renderLtNetProfit(trend);
-    renderLtPvGp(trend);
 
     // Customer composition
     if (ltMix) {
@@ -1212,21 +1182,6 @@ function renderLtNetProfit(trend) {
   });
 }
 
-function renderLtPvGp(trend) {
-  const labels = trend.months.map(m => shortMonth(m.month));
-  createChart('ltChartPvGp', {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: 'PV', data: trend.months.map(m => m.total_pv), backgroundColor: '#2563EB', borderRadius: 4 },
-        { label: 'Gross Profit', data: trend.months.map(m => m.commission), backgroundColor: '#059669', borderRadius: 4 },
-      ],
-    },
-    options: CHART_DEFAULTS,
-  });
-}
-
 function renderLtCustomerMix(mix) {
   const newPv = mix.new_pv || 0;
   const repeatPv = mix.repeat_pv || 0;
@@ -1272,19 +1227,6 @@ function renderLtCustomerMixFallback(lt) {
 }
 
 function renderLtComposition(data) {
-  // Region
-  if (data.region && data.region.length > 0) {
-    const hk = data.region.find(r => r.region === 'HK' || r.region === 'Hong Kong');
-    const mo = data.region.find(r => r.region === 'MO' || r.region === 'Macau');
-    const hkCount = hk ? hk.count : 0;
-    const moCount = mo ? mo.count : 0;
-    const total = data.region.reduce((sum, r) => sum + (r.count || 0), 0);
-    const otherCount = total - hkCount - moCount;
-    document.getElementById('ltRegionHK').textContent = fmt(hkCount);
-    document.getElementById('ltRegionMO').textContent = fmt(moCount);
-    document.getElementById('ltRegionOther').textContent = fmt(otherCount);
-  }
-
   // Membership
   if (data.membership) {
     const mem = data.membership;
@@ -1702,8 +1644,6 @@ function renderRotationRows(data) {
 
   // Sort by total_customers descending
   const sorted = [...data].sort((a, b) => (b.total_customers || 0) - (a.total_customers || 0));
-  const SHOW_DEFAULT = 3;
-
   const stageKeys = [
     { key: 'ROTATE_KNOWLEDGE', label: 'Knowledge' },
     { key: 'ROTATE_TESTIMONIAL', label: 'Testimonial' },
@@ -1715,8 +1655,7 @@ function renderRotationRows(data) {
   let html = '';
   sorted.forEach((product, idx) => {
     const color = PRODUCT_COLORS[product.sku] || '#A1A1AA';
-    const hidden = idx >= SHOW_DEFAULT ? ' style="display:none;"' : '';
-    html += `<div class="product-row rotation-product-row"${hidden}>
+    html += `<div class="product-row rotation-product-row">
       <div class="product-header">
         <div class="product-name"><div class="product-badge" style="background: ${color};">${product.sku}</div>${product.sku}</div>
         <div class="product-total">${fmt(product.total_customers)} customers</div>
@@ -1741,30 +1680,7 @@ function renderRotationRows(data) {
     html += `</div></div></div>`;
   });
 
-  // "Show X more" toggle
-  if (sorted.length > SHOW_DEFAULT) {
-    const moreCount = sorted.length - SHOW_DEFAULT;
-    html += `<button class="rotation-toggle" id="rotationToggle">Show ${moreCount} more</button>`;
-  }
-
   el.innerHTML = html;
-
-  // Toggle handler
-  const toggleBtn = document.getElementById('rotationToggle');
-  if (toggleBtn) {
-    let expanded = false;
-    toggleBtn.addEventListener('click', () => {
-      expanded = !expanded;
-      const rows = el.querySelectorAll('.rotation-product-row');
-      rows.forEach((row, i) => {
-        if (i >= SHOW_DEFAULT) {
-          row.style.display = expanded ? '' : 'none';
-        }
-      });
-      const hiddenCount = sorted.length - SHOW_DEFAULT;
-      toggleBtn.textContent = expanded ? `Hide ${hiddenCount}` : `Show ${hiddenCount} more`;
-    });
-  }
 }
 
 async function loadPipelineData() {
