@@ -2616,6 +2616,13 @@ async function loadAdsTab() {
     renderConversionSection(convCampaigns, adsByGroup);
     renderBrandingSection(brandCampaigns, adsByGroup);
 
+    // Attach campaign expand/collapse click handlers via event delegation
+    content.querySelectorAll('.campaign-header').forEach(header => {
+      header.addEventListener('click', () => {
+        header.closest('.campaign-row').classList.toggle('expanded');
+      });
+    });
+
     loading.style.display = 'none';
     content.style.display = 'block';
     tabDataLoaded.ads = selectedMonth;
