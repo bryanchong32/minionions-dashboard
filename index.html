@@ -86,6 +86,23 @@
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
+    /* ===== CAMPAIGNS TAB ===== */
+    .timeline-row { display: grid; grid-template-columns: 90px 1fr auto; gap: 12px; align-items: center; background: var(--surface); padding: 12px 16px; }
+    .timeline-row--next { border-left: 3px solid #2563EB; }
+    .timeline-row--done { opacity: 0.6; }
+    .timeline-date { font-family: var(--mono); font-size: 12px; color: var(--text-2); }
+    .timeline-name { font-size: 13px; font-weight: 500; }
+    .timeline-segments { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .timeline-badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+    .timeline-badge--completed { background: var(--green-bg); color: var(--green); }
+    .timeline-badge--in_progress { background: var(--orange-bg); color: var(--orange); }
+    .timeline-badge--planned { background: var(--border-light); color: var(--text-3); }
+    .checklist-row { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; background: var(--surface); padding: 10px 16px; }
+    .checklist-owner { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; background: var(--border-light); color: var(--text-2); }
+    .checklist-owner--claude { background: var(--purple-bg); color: var(--purple); }
+    .checklist-owner--bryan { background: var(--green-bg); color: var(--green); }
+    .checklist-owner--cy { background: var(--orange-bg); color: var(--orange); }
+
     /* ===== SECTION HEADERS ===== */
     .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; margin-top: 32px; }
     .section-header:first-child { margin-top: 0; }
@@ -635,6 +652,7 @@
     <div class="tab" data-tab="lifetime">Lifetime</div>
     <div class="tab" data-tab="monthly">Monthly</div>
     <div class="tab" data-tab="ads">Ads</div>
+    <div class="tab" data-tab="campaigns">Campaigns</div>
   </div>
 
   <!-- Content -->
@@ -1079,6 +1097,57 @@
       </div>
     </div>
 
+    <!-- ===== TAB 4: CAMPAIGNS ===== -->
+    <div class="tab-panel" id="panel-campaigns">
+      <div id="campaigns-empty" style="display:none;">
+        <div style="text-align:center; padding:80px 24px; color:var(--text-3);">
+          <div style="font-size:40px; margin-bottom:12px;">📋</div>
+          <div style="font-size:15px; font-weight:500;">No active campaign</div>
+          <div style="font-size:13px; margin-top:4px;">Campaign data will appear here when a promo is running.</div>
+        </div>
+      </div>
+
+      <div id="campaigns-content" style="display:none;">
+        <div style="display:grid; grid-template-columns:1fr auto; align-items:start; gap:16px; margin-bottom:20px;">
+          <div>
+            <div id="camp-name" style="font-size:20px; font-weight:600;"></div>
+            <div id="camp-display-name" style="font-size:13px; color:var(--text-2); margin-top:2px;"></div>
+            <div id="camp-promo-code" style="font-size:11px; color:var(--text-3); margin-top:4px; font-family:var(--mono); background:var(--border-light); display:inline-block; padding:2px 8px; border-radius:4px;"></div>
+            <div id="camp-dates" style="font-size:12px; color:var(--text-3); margin-top:6px; font-family:var(--mono);"></div>
+          </div>
+          <div id="camp-countdown" style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px 16px; text-align:center;">
+            <div id="camp-days-left" style="font-size:24px; font-weight:700; font-family:var(--mono);"></div>
+            <div style="font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.5px;">Days Left</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:20px;">
+          <div style="background:var(--surface); padding:16px; text-align:center;">
+            <div style="font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.5px;">Orders</div>
+            <div id="camp-orders" style="font-size:22px; font-weight:600; font-family:var(--mono); margin-top:4px;">—</div>
+          </div>
+          <div style="background:var(--surface); padding:16px; text-align:center;">
+            <div style="font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.5px;">Total PV</div>
+            <div id="camp-pv" style="font-size:22px; font-weight:600; font-family:var(--mono); margin-top:4px;">—</div>
+          </div>
+          <div style="background:var(--surface); padding:16px; text-align:center;">
+            <div style="font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.5px;">Customers</div>
+            <div id="camp-customers" style="font-size:22px; font-weight:600; font-family:var(--mono); margin-top:4px;">—</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <div style="font-size:14px; font-weight:600; margin-bottom:12px;">Engagement Timeline</div>
+          <div id="camp-timeline" style="display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:8px; overflow:hidden;"></div>
+        </div>
+
+        <details style="margin-bottom:20px;">
+          <summary style="font-size:14px; font-weight:600; cursor:pointer; padding:8px 0;">Setup Checklist</summary>
+          <div id="camp-checklist" style="margin-top:8px; display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:8px; overflow:hidden;"></div>
+        </details>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1093,7 +1162,7 @@ let apiToken = '';
 let selectedMonth = '';
 let charts = {};
 let activeTab = 'monthly'; // default landing tab
-let tabDataLoaded = { lifetime: null, monthly: null, ads: null }; // tracks which month was loaded per tab
+let tabDataLoaded = { lifetime: null, monthly: null, ads: null, campaigns: null }; // tracks which month was loaded per tab
 let adsTimeRange = 'mtd'; // default time range for ads tab
 
 // ===== HELPERS =====
@@ -1241,6 +1310,7 @@ function initApp() {
     tabDataLoaded.lifetime = null;
     tabDataLoaded.monthly = null;
     tabDataLoaded.ads = null;
+    tabDataLoaded.campaigns = null;
     loadTabData();
   });
 
@@ -1250,6 +1320,7 @@ function initApp() {
     tabDataLoaded.lifetime = null;
     tabDataLoaded.monthly = null;
     tabDataLoaded.ads = null;
+    tabDataLoaded.campaigns = null;
     loadTabData();
   });
 
@@ -1324,6 +1395,9 @@ async function loadTabData() {
   }
   if (activeTab === 'ads' && tabDataLoaded.ads !== selectedMonth) {
     await loadAdsTab();
+  }
+  if (activeTab === 'campaigns' && tabDataLoaded.campaigns !== selectedMonth) {
+    await loadCampaignsTab();
   }
 }
 
@@ -2632,6 +2706,90 @@ async function loadAdsTab() {
     loading.className = 'error-msg';
     console.error('Ads tab error:', e);
   }
+}
+
+// ===== CAMPAIGNS TAB =====
+async function loadCampaignsTab() {
+  const data = await apiSafe('/campaign-state');
+  if (!data || !data.active || !data.campaign) {
+    document.getElementById('campaigns-empty').style.display = 'block';
+    document.getElementById('campaigns-content').style.display = 'none';
+    tabDataLoaded.campaigns = selectedMonth;
+    return;
+  }
+
+  document.getElementById('campaigns-empty').style.display = 'none';
+  document.getElementById('campaigns-content').style.display = 'block';
+
+  const c = data.campaign;
+
+  // Header
+  document.getElementById('camp-name').textContent = c.campaign?.name || '—';
+  document.getElementById('camp-display-name').textContent = c.campaign?.display_name || '';
+  document.getElementById('camp-promo-code').textContent = c.campaign?.promo_code || '';
+  const startStr = c.dates?.orders_open || '';
+  const endStr = c.dates?.orders_close || '';
+  document.getElementById('camp-dates').textContent = startStr && endStr ? `${startStr} → ${endStr}` : '';
+
+  // Countdown
+  const now = new Date();
+  const closeDate = endStr ? new Date(endStr + 'T23:59:59+08:00') : null;
+  const daysLeft = closeDate ? Math.max(0, Math.ceil((closeDate - now) / 86400000)) : '—';
+  const countdownEl = document.getElementById('camp-days-left');
+  countdownEl.textContent = daysLeft;
+  countdownEl.style.color = '';
+  if (daysLeft <= 3 && daysLeft !== '—') countdownEl.style.color = 'var(--red)';
+  else if (daysLeft <= 7 && daysLeft !== '—') countdownEl.style.color = 'var(--orange)';
+
+  // Performance KPIs
+  const perf = c.performance || {};
+  document.getElementById('camp-orders').textContent = perf.promo_orders != null ? fmt(perf.promo_orders) : '—';
+  document.getElementById('camp-pv').textContent = perf.promo_pv != null ? fmt(perf.promo_pv) : '—';
+  document.getElementById('camp-customers').textContent = perf.unique_customers != null ? fmt(perf.unique_customers) : '—';
+
+  // Engagement Timeline
+  const schedule = c.engagement_schedule || [];
+  const today = now.toISOString().slice(0, 10);
+  let foundNext = false;
+  const timelineHtml = schedule.map(e => {
+    const isNext = !foundNext && e.status === 'planned' && e.planned_date >= today;
+    if (isNext) foundNext = true;
+    const rowClass = e.status === 'completed' ? 'timeline-row timeline-row--done'
+      : isNext ? 'timeline-row timeline-row--next'
+      : 'timeline-row';
+    const badgeClass = 'timeline-badge timeline-badge--' + e.status;
+    const dateDisplay = e.planned_date ? formatTimelineDate(e.planned_date) : 'TBD';
+    const segmentNames = (e.segments || []).map(s => s.replace(/-reorder|-recent/, '').toUpperCase()).join(', ');
+    return `<div class="${rowClass}">
+      <div class="timeline-date">${dateDisplay}</div>
+      <div><div class="timeline-name">${e.touchpoint}</div><div class="timeline-segments">${segmentNames}${e.exclude_converted ? ' · excl. converted' : ''}</div></div>
+      <div class="${badgeClass}">${e.status.replace('_', ' ')}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('camp-timeline').innerHTML = timelineHtml;
+
+  // Setup Checklist
+  const checklist = c.setup_checklist || [];
+  const checklistHtml = checklist.map(item => {
+    const ownerClass = 'checklist-owner checklist-owner--' + (item.owner || '');
+    const statusIcon = item.status === 'done' ? '✓' : '○';
+    const statusColor = item.status === 'done' ? 'var(--green)' : 'var(--text-3)';
+    return `<div class="checklist-row">
+      <div style="font-size:13px;"><span style="color:${statusColor}; margin-right:6px;">${statusIcon}</span>${item.task}</div>
+      <div class="${ownerClass}">${item.owner}</div>
+      <div style="font-size:12px; color:${statusColor}; font-weight:500;">${item.status}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('camp-checklist').innerHTML = checklistHtml;
+
+  tabDataLoaded.campaigns = selectedMonth;
+}
+
+function formatTimelineDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00+08:00');
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
 }
 
 // Ads tab event listeners — called once after DOM ready
