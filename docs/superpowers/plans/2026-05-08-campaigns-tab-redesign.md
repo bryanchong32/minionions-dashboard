@@ -440,6 +440,7 @@ This is the largest task — the dual-track timeline with today line, card state
 ```javascript
 function renderEngCard(eng, isNext, isArchived) {
   const track = eng.track || 'repeat';
+  if (!eng.track) console.warn('Engagement', eng.id, 'missing track field, defaulting to repeat');
   const status = eng.status || 'planned';
   const isFuture = status === 'planned' && !isNext;
   const isDone = status === 'completed';
@@ -537,7 +538,6 @@ function renderEngDetails(eng, isArchived) {
   if (!isArchived) {
     if (eng.broadcast_lists && Object.keys(eng.broadcast_lists).length > 0) {
       const updated = eng.broadcast_lists_updated ? new Date(eng.broadcast_lists_updated).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Kuala_Lumpur' }) : 'Never refreshed';
-      const excludeCount = Object.values(eng.broadcast_lists).reduce((sum, s) => sum, 0); // shown from segments.conversions in parent
       let listRows = '';
       for (const [segId, info] of Object.entries(eng.broadcast_lists)) {
         const label = segId.replace(/-reorder|-recent/, '').toUpperCase();
