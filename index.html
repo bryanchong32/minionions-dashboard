@@ -91,7 +91,6 @@
     .camp-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
     .camp-grid-3 { display: grid; grid-template-columns: 200px 1fr 1fr; gap: 16px; margin-bottom: 16px; }
     .camp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
-    .camp-card--overflow { overflow: hidden; }
     .camp-date-chip { border-radius: 6px; padding: 5px 12px; text-align: center; }
     .camp-date-chip--start { background: #EFF6FF; border: 1px solid #BFDBFE; }
     .camp-date-chip--end { background: #FEF2F2; border: 1px solid #FECACA; }
@@ -144,7 +143,6 @@
     .camp-task--partial { background: var(--orange-bg); }
     .camp-task--pending { background: var(--border-light); }
     .camp-task__icon { font-size: 14px; }
-    .camp-task__label--done { text-decoration: line-through; color: var(--text-3); }
     .camp-task__count { font-size: 10px; color: var(--text-3); margin-left: 4px; }
     .camp-task__owner { margin-left: auto; font-size: 10px; color: white; padding: 1px 6px; border-radius: 3px; }
     .camp-task__owner--claude { background: var(--purple); }
@@ -1276,12 +1274,18 @@ function campCopy(text) {
   } catch (e) { show('Copy failed'); }
 }
 
+function escHtml(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
 function renderDotCalendar(startDate, endDate) {
   const start = new Date(startDate + 'T00:00:00+08:00');
   const end = new Date(endDate + 'T23:59:59+08:00');
   const now = new Date();
-  const today = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' }));
-  const todayStr = today.toISOString().slice(0, 10);
+  const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
 
   const daysLeft = Math.max(0, Math.ceil((end - now) / 86400000));
   const ended = now > end;
@@ -1346,6 +1350,7 @@ function renderDotCalendar(startDate, endDate) {
 }
 
 function buildSegmentTable(segments) {
+  if (!segments || !segments.include_lists?.length) return '';
   const lists = segments?.include_lists || [];
   const conversions = segments?.conversions || {};
 
@@ -1371,7 +1376,7 @@ function buildSegmentTable(segments) {
   let rows = '';
   for (const p of sorted) {
     rows += `<div class="camp-seg__row">
-      <div class="camp-seg__cell camp-seg__cell--label">${p}</div>
+      <div class="camp-seg__cell camp-seg__cell--label">${escHtml(p)}</div>
       ${cellHtml(products[p]?.reorder)}
       ${cellHtml(products[p]?.recent)}
     </div>`;
@@ -1409,12 +1414,12 @@ function renderSetupTasks(tasks) {
     html += `<div style="margin-bottom:10px;">
       <div class="${cls}">
         <span class="camp-task__icon">${statusIcon(task.status)}</span>
-        <span>${task.label}</span>${countHtml}
-        <span class="${ownerCls(task.owner, false)}">${task.owner || ''}</span>
+        <span>${escHtml(task.label)}</span>${countHtml}
+        <span class="${ownerCls(task.owner, false)}">${escHtml(task.owner)}</span>
       </div>`;
 
     for (const sub of (task.subtasks || [])) {
-      const subLabel = sub.status === 'done' ? `<span style="color:var(--text-3); text-decoration:line-through;">${sub.label}</span>` : `<span>${sub.label}</span>`;
+      const subLabel = sub.status === 'done' ? `<span style="color:var(--text-3); text-decoration:line-through;">${escHtml(sub.label)}</span>` : `<span>${escHtml(sub.label)}</span>`;
       html += `<div class="camp-subtask">${statusIcon(sub.status)} ${subLabel}</div>`;
     }
     html += '</div>';
@@ -1427,9 +1432,9 @@ function renderSetupTasks(tasks) {
       const doneCount = (task.subtasks || []).length;
       html += `<div style="display:flex; align-items:center; gap:8px; padding:4px 8px; margin-bottom:4px;">
         <span style="color:var(--green); font-size:14px;">✓</span>
-        <span style="font-size:12px; color:var(--text-3); text-decoration:line-through;">${task.label}</span>
+        <span style="font-size:12px; color:var(--text-3); text-decoration:line-through;">${escHtml(task.label)}</span>
         <span style="font-size:10px; color:var(--text-3);">${doneCount}/${doneCount}</span>
-        <span class="${ownerCls(task.owner, true)}">${task.owner || ''}</span>
+        <span class="${ownerCls(task.owner, true)}">${escHtml(task.owner)}</span>
       </div>`;
     }
     html += '</div>';
@@ -1467,7 +1472,7 @@ function renderEngCard(eng, isNext, isArchived) {
     const cls = track === 'repeat' ? 'camp-eng-card camp-eng-card--done-repeat' : 'camp-eng-card camp-eng-card--done-new';
     return `<div class="${cls}">
       <div class="camp-eng-card__date">${dateStr}</div>
-      <div class="camp-eng-card__title">${eng.id.toUpperCase()} · ${eng.touchpoint}</div>
+      <div class="camp-eng-card__title">${eng.id.toUpperCase()} · ${escHtml(eng.touchpoint)}</div>
       <div class="camp-eng-card__meta">${segNames}${exclNote}</div>
     </div>`;
   }
@@ -1476,7 +1481,7 @@ function renderEngCard(eng, isNext, isArchived) {
   if (isFuture) {
     return `<div class="camp-eng-card camp-eng-card--future" onclick="this.querySelector('.camp-eng-expand')?.classList.toggle('hidden')">
       <div class="camp-eng-card__date">${dateStr}</div>
-      <div class="camp-eng-card__title">${eng.id.toUpperCase()} · ${eng.touchpoint}</div>
+      <div class="camp-eng-card__title">${eng.id.toUpperCase()} · ${escHtml(eng.touchpoint)}</div>
       ${eng.reasoning || eng.captions ? '<div class="camp-eng-expand hidden" style="margin-top:8px;">' + renderEngDetails(eng, isArchived) + '</div>' : ''}
     </div>`;
   }
@@ -1488,7 +1493,7 @@ function renderEngCard(eng, isNext, isArchived) {
     <div class="camp-eng-badge" style="background:${badgeBg};">Next</div>
     <div style="padding-top:4px;">
       <div class="camp-eng-card__date">${dateStr}</div>
-      <div class="camp-eng-card__title">${eng.id.toUpperCase()} · ${eng.touchpoint}</div>
+      <div class="camp-eng-card__title">${eng.id.toUpperCase()} · ${escHtml(eng.touchpoint)}</div>
       <div class="camp-eng-card__meta">${segNames}${exclNote}</div>
       ${renderEngDetails(eng, isArchived)}
     </div>
@@ -1503,7 +1508,7 @@ function renderEngDetails(eng, isArchived) {
     const borderColor = (eng.track || 'repeat') === 'repeat' ? 'var(--accent)' : 'var(--orange)';
     html += `<div class="camp-eng-strategy" style="border-color:${borderColor};">
       <div class="camp-eng-detail__label">Strategy</div>
-      ${eng.reasoning}
+      ${escHtml(eng.reasoning)}
     </div>`;
   }
 
@@ -1511,7 +1516,7 @@ function renderEngDetails(eng, isArchived) {
   if (eng.image_prompt) {
     html += `<div class="camp-eng-detail" style="margin-top:6px;">
       <div class="camp-eng-detail__label">Image Prompt</div>
-      <div class="camp-eng-copybox">${eng.image_prompt}<button class="camp-eng-copybtn" onclick="event.stopPropagation(); campCopy(${JSON.stringify(eng.image_prompt).replace(/'/g, '\\u0027')})">Copy</button></div>
+      <div class="camp-eng-copybox">${escHtml(eng.image_prompt)}<button class="camp-eng-copybtn" onclick="event.stopPropagation(); campCopy(${JSON.stringify(eng.image_prompt).replace(/'/g, '\\u0027')})">Copy</button></div>
     </div>`;
   }
 
@@ -1526,7 +1531,7 @@ function renderEngDetails(eng, isArchived) {
           ${eng.captions[segments[0]].map((_, i) => `<button class="camp-caption-tab ${i === 0 ? 'camp-caption-tab--active' : ''}" onclick="event.stopPropagation(); switchCaption('${engId}', ${i})">${i + 1}</button>`).join('')}
         </div>
       </div>
-      <div class="camp-eng-copybox" id="caption-text-${engId}">${eng.captions[segments[0]][0] || ''}<button class="camp-eng-copybtn" onclick="event.stopPropagation(); campCopy(document.getElementById('caption-text-${engId}').textContent.replace('Copy','').trim())">Copy</button></div>
+      <div class="camp-eng-copybox" id="caption-text-${engId}">${escHtml(eng.captions[segments[0]][0])}<button class="camp-eng-copybtn" onclick="event.stopPropagation(); campCopy(captionState['${engId}'].currentText)">Copy</button></div>
       <div style="margin-top:4px;">
         <select style="font-size:10px; padding:2px 6px; border:1px solid var(--border); border-radius:3px; background:var(--surface); font-family:var(--font);"
           onchange="event.stopPropagation(); switchCaptionSegment('${engId}', this.value)">
@@ -1586,7 +1591,8 @@ function switchCaption(engId, idx) {
   const texts = captions[segment] || [];
   const el = document.getElementById('caption-text-' + engId);
   if (el && texts[idx]) {
-    el.innerHTML = texts[idx] + '<button class="camp-eng-copybtn" onclick="event.stopPropagation(); campCopy(document.getElementById(\'caption-text-' + engId + '\').textContent.replace(\'Copy\',\'\').trim())">Copy</button>';
+    captionState[engId].currentText = texts[idx];
+    el.innerHTML = escHtml(texts[idx]) + '<button class="camp-eng-copybtn" onclick="event.stopPropagation(); campCopy(captionState[\'' + engId + '\'].currentText)">Copy</button>';
   }
   // Update active tab
   const container = document.getElementById('captions-' + engId);
@@ -1653,7 +1659,7 @@ function renderPlaybook(schedule, isArchived) {
   if (!schedule || schedule.length === 0) return '';
 
   const now = new Date();
-  const todayStr = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' })).toISOString().slice(0, 10);
+  const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
 
   // Split into tracks
   const repeatEngs = schedule.filter(e => (e.track || 'repeat') === 'repeat');
@@ -1723,7 +1729,7 @@ function renderPlaybook(schedule, isArchived) {
         // Store caption state
         if (eng.captions) {
           const segs = Object.keys(eng.captions);
-          captionState[eng.id] = { segment: segs[0], captions: eng.captions };
+          captionState[eng.id] = { segment: segs[0], captions: eng.captions, currentText: eng.captions[segs[0]][0] || '' };
         }
 
         colHtml += renderEngCard(eng, isNext, isArchived);
@@ -3358,21 +3364,21 @@ async function loadCampaignsTab() {
   const mechLines = [];
   if (mech.type || mech.tiers) {
     const tier = mech.tiers?.[0];
-    mechLines.push(`<strong>Type:</strong> ${mech.type || 'Free Gift'}${tier ? ` — ${tier.threshold} → ${tier.reward}` : ''}`);
+    mechLines.push(`<strong>Type:</strong> ${escHtml(mech.type) || 'Free Gift'}${tier ? ` — ${escHtml(tier.threshold)} → ${escHtml(tier.reward)}` : ''}`);
   }
-  if (mech.bonus) mechLines.push(`<strong>Bonus:</strong> ${mech.bonus}`);
-  const products = (c.tenant_config?.product_focus || []).join(', ');
+  if (mech.bonus) mechLines.push(`<strong>Bonus:</strong> ${escHtml(mech.bonus)}`);
+  const products = (c.tenant_config?.product_focus || []).map(p => escHtml(p)).join(', ');
   if (products) mechLines.push(`<strong>Products:</strong> ${products}${mech.mix_match ? ' (mix & match OK)' : ''}`);
-  const packages = (c.internal_packages || []).map(p => p.name).join(', ');
+  const packages = (c.internal_packages || []).map(p => escHtml(p.name)).join(', ');
   if (packages) mechLines.push(`<strong>Packages:</strong> ${packages}`);
 
   const level1 = `<div class="camp-grid-2">
     <div class="camp-card">
       <div style="display:grid; grid-template-columns:1fr auto; gap:16px;">
         <div>
-          <div style="font-size:20px; font-weight:600;">${camp.name || '—'}</div>
-          <div style="font-size:12px; color:var(--text-2); margin-top:2px;">${camp.display_name || ''}</div>
-          <div style="margin-top:10px;"><span style="font-size:11px; font-family:var(--mono); background:var(--border-light); padding:2px 8px; border-radius:4px; color:var(--text-2);">${camp.promo_code || ''}</span></div>
+          <div style="font-size:20px; font-weight:600;">${escHtml(camp.name) || '—'}</div>
+          <div style="font-size:12px; color:var(--text-2); margin-top:2px;">${escHtml(camp.display_name)}</div>
+          <div style="margin-top:10px;"><span style="font-size:11px; font-family:var(--mono); background:var(--border-light); padding:2px 8px; border-radius:4px; color:var(--text-2);">${escHtml(camp.promo_code)}</span></div>
         </div>
         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
           ${startChip}${endChip}
