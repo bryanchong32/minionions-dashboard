@@ -252,18 +252,18 @@ New endpoints for the workbench to execute confirmed recommendations:
 {
   "actions": [
     { "type": "pause", "target_type": "adset", "target_id": "120244...", "reason": "Kill: RM120 spent, 0 msgs" },
-    { "type": "graduate", "ad_id": "120244...", "creative_id": "269058...", "from_campaign": "Hook Test", "to_campaign": "Proving Ground" }
+    { "type": "graduate", "ad_id": "120244...", "from_campaign": "Hook Test", "to_campaign": "Proving Ground" }
   ]
 }
 ```
 
-**Graduate action execution (3 sequential Meta API calls):**
+**Graduate action execution (4 sequential steps):**
 1. Find Proving Ground campaign by name match (contains "proving ground"). If none exists, return error — Bryan must create it first via Ads Manager or the agent.
 2. Create ad set in the Proving Ground campaign: ABO, RM25/day (2500 cents), optimization_goal=CONVERSATIONS, destination_type=MESSENGER, broad HK targeting (copy from existing Proving Ground ad sets). Ad set created as ACTIVE.
-3. Create ad in the new ad set, reusing the `creative_id` from the source ad (preserves social proof). The `creative_id` is fetched via `GET /{ad_id}?fields=creative{id}` before execution.
+3. Create ad in the new ad set, reusing the `creative_id` from the source ad (preserves social proof). The backend fetches `creative_id` via `GET /{ad_id}?fields=creative{id}` — the frontend does not need to provide it.
 4. Pause the source **ad** (not ad set) in the Testing campaign: `POST /{ad_id} status=PAUSED`.
 
-**Kill action:** Pauses the target (ad or ad set) via `POST /{target_id} status=PAUSED`.
+**Kill action:** Pauses the target ad via `POST /{ad_id} status=PAUSED`. Default is ad-level (supports cherry-picking individual ads from a hook). To kill an entire ad set, frontend sends `target_type: "adset"` with `target_id` set to the ad set ID.
 
 **Partial failure handling:** Actions execute sequentially, stop on first failure. Response returns all results so far plus the error. Each step is logged to `meta_action_log` before execution so orphaned state can be cleaned up manually.
 
@@ -289,7 +289,7 @@ CREATE INDEX idx_action_log_created ON meta_action_log(created_at);
 
 ## Edge Cases
 
-1. **Stale reviews:** Recommendations persist as "pending review" with staleness counter. New milestone snapshots stack below. No auto-action.
+1. **Unactioned recommendations:** Recommendations are regenerated fresh on every page load from live Meta API data + threshold rules. No persistence. If the user doesn't act, they simply see updated recommendations next visit (data may have changed). The only persisted state is `meta_action_log` entries for partially-failed confirmed actions.
 2. **Overlapping test cycles:** Multiple Hook Test campaigns stack in Testing section, each with own day tracker.
 3. **Budget impact on graduation:** Confirm screen shows budget before/after table. Only appears when Graduate actions are checked.
 4. **CRM cross-reference:** Kill recommendations check for attributed orders and warn if found.
