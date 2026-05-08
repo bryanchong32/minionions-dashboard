@@ -132,7 +132,33 @@ All endpoints use the short-form path. The existing `api()` helper prepends `/ap
 | `/campaign-broadcast-list?engagement={id}&segment={id}` | GET | Returns CSV file (Content-Disposition: attachment). Queries CRM orders with promo_name filter, excludes converted customers. (new) |
 | `/campaign-state` | PATCH | Body: `{"engagement_id": "e4", "status": "completed"}`. Only allows updating engagement status. (new) |
 
-**Fallback:** If `/campaign-list` returns 404, the campaign selector shows only the active campaign from `/campaign-state` as a single non-interactive option.
+**Fallback:** If `/campaign-list` returns 404 or an empty array, the campaign selector shows only the active campaign from `/campaign-state` as a single non-interactive option. If that also returns no active campaign, show the "No active campaign" empty state.
+
+### Field Defaults & Empty States
+
+New engagement fields are all optional. The dashboard must handle missing/null gracefully:
+
+| Field | When missing | UI behavior |
+|-------|-------------|-------------|
+| `track` | Default to `"repeat"` | Log console warning |
+| `reasoning` | Hide strategy block entirely | Card still shows title + segments |
+| `image_prompt` | Hide image prompt section | No placeholder |
+| `captions` | Show "Captions pending" placeholder | Gray italic text, no variation tabs |
+| `broadcast_lists` | Show "Lists not generated yet" | Disabled download buttons |
+| `broadcast_lists_updated` | Show "Never refreshed" | Refresh button still active |
+| `segments.conversions` | Default all to 0 | Shows `total/total · 0` |
+| `setup_tasks` | Hide Level 3 section entirely | — |
+
+**Same-date collisions:** If two engagements share the same date in the same track, stack them vertically within the same grid cell. Implementation: group engagements by `(date, track)`, render array per cell.
+
+### Segment ID Mapping
+
+Segment IDs map to table rows by convention:
+
+- `{product}-reorder` → Cold column (e.g., `hmg-reorder` → HMG row, Cold)
+- `{product}-recent` → Hot column (e.g., `hmg-recent` → HMG row, Hot)
+- If a `conversions` key has no matching `include_lists` entry: `total = 0`, show warning
+- If an `include_lists` entry has no `conversions` key: `converted = 0`
 
 ### Error Handling
 
@@ -141,11 +167,15 @@ Interactive actions (refresh, download, PATCH) follow the existing dashboard err
 - Do not block the rest of the page
 - Log to console via `console.error()`
 
+**Copy to clipboard:** Try `navigator.clipboard.writeText()`, catch and fall back to legacy `document.execCommand('copy')` with a temporary textarea. Show brief "Copied!" toast on success.
+
 ### Dot Calendar Edge Cases
 
 - Campaigns up to 42 days (6 weeks) render cleanly in the grid
 - Campaigns longer than 42 days: cap at 6 rows, show "+N more days" text below the grid
 - Campaign ended: all dots dark navy, "ENDED" replaces days-left number
+- Today before campaign start: no dots elapsed, no today marker
+- Today after campaign end: all dots elapsed, show "ENDED"
 
 ---
 
