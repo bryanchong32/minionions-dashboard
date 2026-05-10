@@ -2891,8 +2891,20 @@ function renderThumb(ad) {
 }
 
 function getAdMessages(ad) {
-  // API returns flat fields: first_replies, new_leads, conversations_started
-  return parseInt(ad.first_replies, 10) || parseInt(ad.new_leads, 10) || parseInt(ad.conversations_started, 10) || 0;
+  // Prefer flat fields, then check actions array for messaging_first_reply
+  const fr = parseInt(ad.first_replies, 10) || 0;
+  const nl = parseInt(ad.new_leads, 10) || 0;
+  const cs = parseInt(ad.conversations_started, 10) || 0;
+  const flat = Math.max(fr, nl, cs);
+  if (flat > 0) return flat;
+  // Fallback: parse actions array (Meta returns [{action_type, value}])
+  if (Array.isArray(ad.actions)) {
+    const act = ad.actions.find(a => a.action_type === 'onsite_conversion.messaging_first_reply'
+      || a.action_type === 'messaging_first_reply'
+      || a.action_type === 'onsite_conversion.messaging_conversation_started_7d');
+    if (act) return parseInt(act.value, 10) || 0;
+  }
+  return 0;
 }
 
 function getAdCpr(ad) {
@@ -2901,9 +2913,20 @@ function getAdCpr(ad) {
 }
 
 function getCampaignMessages(c) {
-  // Campaign insights uses actions object
-  if (c.first_replies) return parseInt(c.first_replies, 10) || 0;
-  if (c.actions) return c.actions.messaging_first_reply || c.actions.onsite_conversion_messaging_first_reply || 0;
+  // Campaign insights: try flat fields first
+  const fr = parseInt(c.first_replies, 10) || 0;
+  const cs = parseInt(c.conversations_started, 10) || 0;
+  const flat = Math.max(fr, cs);
+  if (flat > 0) return flat;
+  // Then try actions (may be array [{action_type, value}] or object)
+  if (Array.isArray(c.actions)) {
+    const act = c.actions.find(a => a.action_type === 'onsite_conversion.messaging_first_reply'
+      || a.action_type === 'messaging_first_reply'
+      || a.action_type === 'onsite_conversion.messaging_conversation_started_7d');
+    if (act) return parseInt(act.value, 10) || 0;
+  } else if (c.actions) {
+    return c.actions.messaging_first_reply || c.actions.onsite_conversion_messaging_first_reply || 0;
+  }
   return 0;
 }
 
@@ -2936,13 +2959,31 @@ function groupAdsByCampaign(ads) {
 // ===== ADS WORKBENCH RENDERING =====
 
 function getAdComments(ad) {
-  // Comments from Meta API: action_type comment or onsite_conversion.post_net_comment
-  return parseInt(ad.comments, 10) || 0;
+  // Comments from Meta API: flat field or actions array
+  const flat = parseInt(ad.comments, 10) || 0;
+  if (flat > 0) return flat;
+  if (Array.isArray(ad.actions)) {
+    const act = ad.actions.find(a => a.action_type === 'comment' || a.action_type === 'post' || a.action_type === 'onsite_conversion.post_net_comment');
+    if (act) return parseInt(act.value, 10) || 0;
+  }
+  return 0;
+}
+
+function getAdSaves(ad) {
+  // Saves from Meta API: flat field or actions array (onsite_conversion.post_save)
+  const flat = parseInt(ad.saves, 10) || 0;
+  if (flat > 0) return flat;
+  if (Array.isArray(ad.actions)) {
+    const act = ad.actions.find(a => a.action_type === 'onsite_conversion.post_save' || a.action_type === 'post_save');
+    if (act) return parseInt(act.value, 10) || 0;
+  }
+  return 0;
 }
 
 function getAdRoas(ad, roasData) {
   if (!roasData || !roasData.ads) return null;
-  const match = roasData.ads.find(r => r.ad_id === ad.ad_id);
+  const aid = String(ad.ad_id);
+  const match = roasData.ads.find(r => String(r.ad_id) === aid);
   if (!match || !match.attributed_pv) return null;
   const spend = parseFloat(ad.spend) || 0;
   return spend > 0 ? match.attributed_pv / spend : null;
@@ -2950,7 +2991,9 @@ function getAdRoas(ad, roasData) {
 
 function getCampaignRoas(campaignId, roasData) {
   if (!roasData || !roasData.ads) return { roas: null, conversions: 0, pv: 0 };
-  const matches = roasData.ads.filter(r => r.campaign_id === campaignId);
+  // Use string comparison to avoid type mismatch (campaign_id may be string or number)
+  const cid = String(campaignId);
+  const matches = roasData.ads.filter(r => String(r.campaign_id) === cid);
   const pv = matches.reduce((s, r) => s + (r.attributed_pv || 0), 0);
   const conversions = matches.reduce((s, r) => s + (r.conversions || 0), 0);
   return { pv, conversions };
@@ -2958,7 +3001,8 @@ function getCampaignRoas(campaignId, roasData) {
 
 function getCampaignDaysSinceLaunch(campaignId, activeCampaigns) {
   if (!activeCampaigns) return null;
-  const meta = (Array.isArray(activeCampaigns) ? activeCampaigns : []).find(c => c.campaign_id === campaignId);
+  const cid = String(campaignId);
+  const meta = (Array.isArray(activeCampaigns) ? activeCampaigns : []).find(c => String(c.campaign_id) === cid);
   if (!meta || !meta.created_time) return null;
   const created = new Date(meta.created_time);
   const now = new Date();
@@ -3116,12 +3160,12 @@ function renderSeasonalSection(seasonalCampaigns, adsByGroup, roasData, activeCa
     const campaignId = c.campaign_id;
     const campaignAds = adsByGroup[campaignId] ? adsByGroup[campaignId].ads : [];
     const spend = parseFloat(c.spend) || 0;
-    const msgs = getCampaignMessages(c);
+    const msgs = campaignAds.reduce((sum, ad) => sum + getAdMessages(ad), 0) || getCampaignMessages(c);
     const { pv, conversions } = getCampaignRoas(campaignId, roasData);
     const roas = spend > 0 && pv > 0 ? pv / spend : null;
 
     // Countdown
-    const meta = (activeCampaigns || []).find(m => m.campaign_id === campaignId);
+    const meta = (activeCampaigns || []).find(m => String(m.campaign_id) === String(campaignId));
     let countdownHtml = '';
     if (meta && meta.lifetime_budget && meta.created_time) {
       const daysActive = getCampaignDaysSinceLaunch(campaignId, activeCampaigns) || 1;
@@ -3240,7 +3284,7 @@ function renderBrandingSectionWb(brandCampaigns, adsByGroup) {
       const adSpend = parseFloat(ad.spend) || 0;
       const engagement = parseInt(ad.post_engagement, 10) || 0;
       const comments = getAdComments(ad);
-      const saves = parseInt(ad.saves, 10) || 0;
+      const saves = getAdSaves(ad);
       const ctr = ad.ctr ? parseFloat(ad.ctr) : null;
       const impr = parseInt(ad.impressions) || 0;
 
@@ -3297,7 +3341,8 @@ function renderProvenSection(provenCampaigns, adsByGroup, roasData) {
     const campaignAds = adsByGroup[c.campaign_id] ? adsByGroup[c.campaign_id].ads : [];
     const adCount = campaignAds.length;
     const spend = parseFloat(c.spend) || 0;
-    const msgs = getCampaignMessages(c);
+    // Compute msgs from ad-level data (more reliable than campaign-level actions)
+    const msgs = campaignAds.reduce((sum, ad) => sum + getAdMessages(ad), 0) || getCampaignMessages(c);
     const cpr = msgs > 0 ? spend / msgs : getCampaignCpr(c);
     const { pv, conversions } = getCampaignRoas(c.campaign_id, roasData);
     const roas = spend > 0 && pv > 0 ? pv / spend : null;
@@ -3367,11 +3412,11 @@ function renderTestingSection(testCampaigns, adsByGroup, roasData, activeCampaig
   testCampaigns.forEach(c => {
     const campaignAds = adsByGroup[c.campaign_id] ? adsByGroup[c.campaign_id].ads : [];
     const spend = parseFloat(c.spend) || 0;
-    const msgs = getCampaignMessages(c);
+    const msgs = campaignAds.reduce((sum, ad) => sum + getAdMessages(ad), 0) || getCampaignMessages(c);
 
     // Day calculation from created_time
     const campaignDay = getCampaignDaysSinceLaunch(c.campaign_id, activeCampaigns) || 1;
-    const meta = (activeCampaigns || []).find(m => m.campaign_id === c.campaign_id);
+    const meta = (activeCampaigns || []).find(m => String(m.campaign_id) === String(c.campaign_id));
     const startDate = meta && meta.created_time ? meta.created_time : null;
     const endDateStr = startDate ? formatDateShort(addDays(startDate, 14)) : '--';
     const startDateStr = startDate ? formatDateShort(startDate) : '--';
@@ -3755,18 +3800,43 @@ async function loadAdsTab() {
     const allAds = [].concat(msgAdsList, peAdsList);
     const activeCampaigns = (activeCampaignsData && activeCampaignsData.campaigns) ? activeCampaignsData.campaigns : (Array.isArray(activeCampaignsData) ? activeCampaignsData : []);
 
-    // Build campaign meta lookup
+    // Build campaign meta lookup (string keys for consistent matching)
     const campaignMetaMap = {};
-    activeCampaigns.forEach(c => { campaignMetaMap[c.campaign_id] = c; });
+    activeCampaigns.forEach(c => { campaignMetaMap[String(c.campaign_id)] = c; });
 
-    // Group ads by campaign
-    const adsByGroup = groupAdsByCampaign(allAds);
+    // Merge active-campaign budget data into campaign-insights campaigns
+    allCampaigns.forEach(c => {
+      const meta = campaignMetaMap[String(c.campaign_id)];
+      if (meta) {
+        if (!c.campaign_daily_budget && !c.daily_budget && meta.daily_budget) {
+          c.daily_budget = meta.daily_budget;
+        }
+        if (!c.lifetime_budget && meta.lifetime_budget) {
+          c.lifetime_budget = meta.lifetime_budget;
+        }
+      }
+    });
+
+    // Filter out ads from paused/archived campaigns for section rendering
+    const activeAds = allAds.filter(ad => {
+      const status = (ad.campaign_status || '').toUpperCase();
+      // Keep if status is active/empty, OR if the campaign is in activeCampaigns
+      return !status || status === 'ACTIVE' || campaignMetaMap[String(ad.campaign_id)];
+    });
+
+    // Group ads by campaign (use activeAds for sections, allAds for KPI totals)
+    const adsByGroup = groupAdsByCampaign(activeAds);
 
     // Classify campaigns using new 5-tier logic
+    // Only include campaigns that are currently active (present in active-campaigns endpoint)
+    // or whose campaign_status is ACTIVE. Paused campaigns from ad-insights are excluded.
     const groups = { testing: [], proving: [], proven: [], branding: [], seasonal: [] };
 
     allCampaigns.forEach(c => {
-      const meta = campaignMetaMap[c.campaign_id] || null;
+      const meta = campaignMetaMap[String(c.campaign_id)] || null;
+      const status = (c.campaign_status || c.status || '').toUpperCase();
+      // Skip paused/archived campaigns unless they're in activeCampaigns
+      if (!meta && (status === 'PAUSED' || status === 'ARCHIVED' || status === 'DELETED')) return;
       const type = classifyCampaign(c.campaign_name, meta);
       if (groups[type]) groups[type].push(c);
       else groups.proven.push(c); // fallback
