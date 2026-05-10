@@ -2913,10 +2913,11 @@ function getAdCpr(ad) {
 }
 
 function getCampaignMessages(c) {
-  // Campaign insights: try flat fields first
+  // Try flat fields first (ad-level data)
   const fr = parseInt(c.first_replies, 10) || 0;
+  const nl = parseInt(c.new_leads, 10) || 0;
   const cs = parseInt(c.conversations_started, 10) || 0;
-  const flat = Math.max(fr, cs);
+  const flat = Math.max(fr, nl, cs);
   if (flat > 0) return flat;
   // Then try actions (may be array [{action_type, value}] or object)
   if (Array.isArray(c.actions)) {
@@ -2927,6 +2928,10 @@ function getCampaignMessages(c) {
   } else if (c.actions) {
     return c.actions.messaging_first_reply || c.actions.onsite_conversion_messaging_first_reply || 0;
   }
+  // Fall back to campaign-level data: sum from attached ads
+  if (c._ads && c._ads.length > 0) {
+    return c._ads.reduce((sum, ad) => sum + getAdMessages(ad), 0);
+  }
   return 0;
 }
 
@@ -2936,7 +2941,7 @@ function getCampaignCpr(c) {
     const cpr = c.cost_per_action.messaging_first_reply || c.cost_per_action.onsite_conversion_messaging_first_reply;
     return cpr ? parseFloat(cpr) : null;
   }
-  // Derive from spend / messages
+  // Derive from spend / messages (getCampaignMessages now uses _ads fallback)
   const msgs = getCampaignMessages(c);
   const spend = parseFloat(c.spend) || 0;
   return msgs > 0 ? Math.round((spend / msgs) * 100) / 100 : null;
@@ -2970,11 +2975,15 @@ function getAdComments(ad) {
 }
 
 function getAdSaves(ad) {
-  // Saves from Meta API: flat field or actions array (onsite_conversion.post_save)
-  const flat = parseInt(ad.saves, 10) || 0;
+  // Saves from Meta API: flat field or actions array
+  const flat = parseInt(ad.saves, 10) || parseInt(ad.post_saves, 10) || 0;
   if (flat > 0) return flat;
   if (Array.isArray(ad.actions)) {
-    const act = ad.actions.find(a => a.action_type === 'onsite_conversion.post_save' || a.action_type === 'post_save');
+    const act = ad.actions.find(a =>
+      a.action_type === 'onsite_conversion.post_save'
+      || a.action_type === 'post_save'
+      || a.action_type === 'save'
+    );
     if (act) return parseInt(act.value, 10) || 0;
   }
   return 0;
@@ -2990,12 +2999,12 @@ function getAdRoas(ad, roasData) {
 }
 
 function getCampaignRoas(campaignId, roasData) {
-  if (!roasData || !roasData.ads) return { roas: null, conversions: 0, pv: 0 };
+  if (!roasData || !roasData.ads || !Array.isArray(roasData.ads)) return { pv: 0, conversions: 0 };
   // Use string comparison to avoid type mismatch (campaign_id may be string or number)
   const cid = String(campaignId);
   const matches = roasData.ads.filter(r => String(r.campaign_id) === cid);
-  const pv = matches.reduce((s, r) => s + (r.attributed_pv || 0), 0);
-  const conversions = matches.reduce((s, r) => s + (r.conversions || 0), 0);
+  const pv = matches.reduce((s, r) => s + (parseFloat(r.attributed_pv) || 0), 0);
+  const conversions = matches.reduce((s, r) => s + (parseInt(r.conversions, 10) || 0), 0);
   return { pv, conversions };
 }
 
@@ -3213,16 +3222,20 @@ function renderSeasonalSection(seasonalCampaigns, adsByGroup, roasData, activeCa
     // Render sub-campaign groups
     function renderSubGroup(label, ads, maxShow) {
       if (ads.length === 0) return '';
-      let out = `<div style="padding: 6px 16px 4px; font-size: 11px; font-weight: 600; color: var(--text-2); border-top: 1px solid var(--border-light);">${label} \u2014 ${ads.length} ad${ads.length !== 1 ? 's' : ''}</div>`;
-      const showAds = ads.slice(0, maxShow);
-      const restCount = ads.length - maxShow;
-      showAds.forEach(ad => {
+      const restCount = Math.max(0, ads.length - maxShow);
+      let out = `<div class="wb-subgroup">
+        <div style="padding: 6px 16px 4px; font-size: 11px; font-weight: 600; color: var(--text-2); border-top: 1px solid var(--border-light);">${label} \u2014 ${ads.length} ad${ads.length !== 1 ? 's' : ''}</div>`;
+      ads.forEach((ad, idx) => {
         const adSpend = parseFloat(ad.spend) || 0;
         const adMsgs = getAdMessages(ad);
         const adCpr = adMsgs > 0 ? adSpend / adMsgs : null;
         const adRoas = getAdRoas(ad, roasData);
         const lowData = adSpend < 100 && adMsgs === 0;
-        out += `<div class="wb-ad-row"${lowData ? ' style="opacity: 0.6;"' : ''}>
+        const styles = [];
+        if (idx >= maxShow) styles.push('display:none');
+        if (lowData) styles.push('opacity: 0.6');
+        const styleAttr = styles.length > 0 ? ` style="${styles.join('; ')}"` : '';
+        out += `<div class="wb-ad-row"${styleAttr}>
           ${renderThumb(ad)}
           <div class="wb-ad-info"><div class="wb-ad-name">${ad.ad_name || '--'}</div>${ad.adset_name ? '<div class="wb-ad-meta">Ad set: ' + ad.adset_name + '</div>' : ''}</div>
           <div class="wb-ad-stats">
@@ -3234,8 +3247,9 @@ function renderSeasonalSection(seasonalCampaigns, adsByGroup, roasData, activeCa
         </div>`;
       });
       if (restCount > 0) {
-        out += `<div class="expand-toggle" data-expand="true">+${restCount} more ad${restCount !== 1 ? 's' : ''} \u25BE</div>`;
+        out += `<div class="expand-toggle" data-expand="true" data-max-show="${maxShow}">+${restCount} more ad${restCount !== 1 ? 's' : ''} \u25BE</div>`;
       }
+      out += '</div>';
       return out;
     }
 
@@ -3278,17 +3292,19 @@ function renderBrandingSectionWb(brandCampaigns, adsByGroup) {
         <div style="font-size: 11px; color: var(--text-3);">${totalImpr > 1000 ? (totalImpr / 1000).toFixed(0) + 'k' : fmt(totalImpr)} impressions \u00B7 ${totalEngagement > 1000 ? (totalEngagement / 1000).toFixed(0) + 'k' : fmt(totalEngagement)} engagements</div>
       </div>`;
 
-    const showAds = campaignAds.slice(0, 3);
-    const restCount = adCount - 3;
-    showAds.forEach(ad => {
+    const maxShow = 3;
+    const restCount = adCount - maxShow;
+    html += '<div class="wb-subgroup">';
+    campaignAds.forEach((ad, idx) => {
       const adSpend = parseFloat(ad.spend) || 0;
       const engagement = parseInt(ad.post_engagement, 10) || 0;
       const comments = getAdComments(ad);
       const saves = getAdSaves(ad);
       const ctr = ad.ctr ? parseFloat(ad.ctr) : null;
       const impr = parseInt(ad.impressions) || 0;
+      const hidden = idx >= maxShow ? ' style="display:none;"' : '';
 
-      html += `<div class="wb-ad-row">
+      html += `<div class="wb-ad-row"${hidden}>
         ${renderThumb(ad)}
         <div class="wb-ad-info">
           <div class="wb-ad-name">${ad.ad_name || '--'}</div>
@@ -3305,8 +3321,9 @@ function renderBrandingSectionWb(brandCampaigns, adsByGroup) {
     });
 
     if (restCount > 0) {
-      html += `<div class="expand-toggle" data-expand="true">+${restCount} more ad${restCount !== 1 ? 's' : ''} \u25BE</div>`;
+      html += `<div class="expand-toggle" data-expand="true" data-max-show="${maxShow}">+${restCount} more ad${restCount !== 1 ? 's' : ''} \u25BE</div>`;
     }
+    html += '</div>';
     html += '</div>';
   });
 
@@ -3805,15 +3822,12 @@ async function loadAdsTab() {
     activeCampaigns.forEach(c => { campaignMetaMap[String(c.campaign_id)] = c; });
 
     // Merge active-campaign budget data into campaign-insights campaigns
+    // Always prefer activeCampaigns budget (source of truth for live budgets)
     allCampaigns.forEach(c => {
       const meta = campaignMetaMap[String(c.campaign_id)];
       if (meta) {
-        if (!c.campaign_daily_budget && !c.daily_budget && meta.daily_budget) {
-          c.daily_budget = meta.daily_budget;
-        }
-        if (!c.lifetime_budget && meta.lifetime_budget) {
-          c.lifetime_budget = meta.lifetime_budget;
-        }
+        c.daily_budget = meta.daily_budget || c.campaign_daily_budget || c.daily_budget || 0;
+        c.lifetime_budget = meta.lifetime_budget || c.lifetime_budget || 0;
       }
     });
 
@@ -3840,6 +3854,12 @@ async function loadAdsTab() {
       const type = classifyCampaign(c.campaign_name, meta);
       if (groups[type]) groups[type].push(c);
       else groups.proven.push(c); // fallback
+    });
+
+    // Filter testing/proving to only active campaigns (paused Round 1 shouldn't show)
+    ['testing', 'proving'].forEach(tier => {
+      const activeIds = new Set(activeCampaigns.map(c => String(c.campaign_id)));
+      groups[tier] = groups[tier].filter(c => activeIds.has(String(c.campaign_id)));
     });
 
     // Sort each group by spend descending
@@ -4018,6 +4038,29 @@ function wireAdsWorkbenchEvents(wb) {
         btn.textContent = 'Error: ' + e.message;
         btn.disabled = false;
         console.error('Action execution error:', e);
+      }
+    });
+  });
+
+  // Expand-toggle: "+N more ads" show/hide hidden rows
+  wb.querySelectorAll('.expand-toggle[data-expand]').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      // Find the closest subgroup or card container
+      const container = toggle.closest('.wb-subgroup') || toggle.parentElement;
+      if (!container) return;
+      const isExpanded = toggle.dataset.expanded === 'true';
+      const maxShow = parseInt(toggle.dataset.maxShow, 10) || 3;
+      // Find all ad rows in the same container
+      const allRows = container.querySelectorAll('.wb-ad-row');
+      allRows.forEach((row, i) => {
+        if (i >= maxShow) row.style.display = isExpanded ? 'none' : '';
+      });
+      if (isExpanded) {
+        toggle.dataset.expanded = 'false';
+        toggle.textContent = toggle.textContent.replace('\u25B4', '\u25BE');
+      } else {
+        toggle.dataset.expanded = 'true';
+        toggle.textContent = toggle.textContent.replace('\u25BE', '\u25B4');
       }
     });
   });
