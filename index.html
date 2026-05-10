@@ -3735,7 +3735,9 @@ function renderProvingGroundSection(provingCampaigns, adsByGroup, roasData, acti
     const adMsgs = getAdMessages(ad);
     const adCpr = adMsgs > 0 ? adSpend / adMsgs : null;
     const adRoas = getAdRoas(ad, roasData);
-    const pgDays = getCampaignDaysSinceLaunch(ad._pgCampaignId, activeCampaigns) || 1;
+    // Per-ad day count from its ad set creation time (each ad has its own 7-day cycle)
+    const adsetCreated = ad.adset_created_time ? new Date(ad.adset_created_time) : null;
+    const pgDays = adsetCreated ? Math.max(1, Math.floor((new Date() - adsetCreated) / 86400000)) : 1;
     const dayProgress = Math.min(pgDays, 7);
     const progressPct = (dayProgress / 7) * 100;
     const barClass = dayProgress < 3 ? 'pg-bar-fill--early' : 'pg-bar-fill--good';
@@ -3769,8 +3771,9 @@ function renderProvingGroundSection(provingCampaigns, adsByGroup, roasData, acti
 
   // Day 7 verdict panel
   const readyAds = allPgAds.filter(ad => {
-    const pgDays = getCampaignDaysSinceLaunch(ad._pgCampaignId, activeCampaigns) || 1;
-    return pgDays >= 7;
+    const adsetCreated = ad.adset_created_time ? new Date(ad.adset_created_time) : null;
+    const days = adsetCreated ? Math.max(1, Math.floor((new Date() - adsetCreated) / 86400000)) : 1;
+    return days >= 7;
   });
 
   html += `<div class="reco-panel" style="margin: 12px 16px 16px;">
