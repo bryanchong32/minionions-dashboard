@@ -154,6 +154,9 @@
     .camp-task__owner--cy { background: var(--teal); }
     .camp-task__owner--muted { background: var(--border); color: var(--text-2); }
     .camp-subtask { font-size: 11px; display: flex; align-items: center; gap: 6px; margin-left: 30px; margin-top: 2px; }
+    .camp-note-input { width: 100%; font-size: 11px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); font-family: var(--font); color: var(--text); margin-top: 4px; }
+    .camp-note-input:focus { border-color: var(--accent); outline: none; }
+    .camp-note-input::placeholder { color: var(--text-3); font-style: italic; }
 
     /* Engagement Playbook */
     .camp-playbook { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
@@ -1522,6 +1525,7 @@ function renderSetupTasks(tasks) {
       const subLabel = sub.status === 'done' ? `<span style="color:var(--text-3); text-decoration:line-through;">${escHtml(sub.label)}</span>` : `<span>${escHtml(sub.label)}</span>`;
       html += `<div class="camp-subtask">${statusIcon(sub.status)} ${subLabel}</div>`;
     }
+    html += `<div style="margin-left:30px;">${campNoteInput('task-' + (task.id || task.label), 'Add a note...')}</div>`;
     html += '</div>';
   }
 
@@ -1684,11 +1688,29 @@ function renderEngDetails(eng, isArchived) {
     }
   }
 
+  // Note input for this engagement
+  html += `<div style="margin-top:8px;">${campNoteInput('eng-' + eng.id, 'Quick note...')}</div>`;
+
   return html;
 }
 
 // Caption state per engagement
 let captionState = {};
+let dashboardNotes = {};
+
+function campNoteInput(key, placeholder) {
+  const val = dashboardNotes[key] || '';
+  return `<input type="text" class="camp-note-input" placeholder="${placeholder || 'Add a note...'}" value="${escHtml(val)}" onblur="saveCampNote('${key}', this.value)" onkeydown="if(event.key==='Enter'){this.blur()}" />`;
+}
+
+async function saveCampNote(key, value) {
+  dashboardNotes[key] = value;
+  try {
+    await api('/campaign-notes', { method: 'PATCH', body: JSON.stringify({ key, value }) });
+  } catch (e) {
+    console.error('Failed to save note:', e);
+  }
+}
 
 function switchCaption(engId, idx) {
   if (!captionState[engId]) return;
@@ -3980,8 +4002,9 @@ async function loadCampaignsTab() {
   const c = data.campaign;
   const isArchived = !!(slug && data.active === false);
 
-  // Reset caption state
+  // Reset state
   captionState = {};
+  dashboardNotes = data.dashboard_notes || {};
 
   // Campaign selector
   let selectorHtml = '';
