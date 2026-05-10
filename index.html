@@ -1768,7 +1768,7 @@ function renderPlaybook(schedule, isArchived) {
   const allDates = [...new Set(schedule.map(e => e.planned_date).filter(Boolean))].sort();
 
   // Find next-up for each track
-  const findNext = (engs) => engs.find(e => e.status !== 'completed' && e.status !== 'cancelled' && e.planned_date >= todayStr);
+  const findNext = (engs) => engs.find(e => e.status === 'in_progress') || engs.find(e => e.status === 'planned' && e.planned_date >= todayStr);
   const nextRepeat = isArchived ? null : findNext(repeatEngs);
   const nextNew = isArchived ? null : findNext(newEngs);
 
