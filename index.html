@@ -3059,12 +3059,14 @@ function renderKpiBar(allAds, peAds, roasData, activeCampaigns) {
   const totalConversions = totalMsgs + totalComments;
   const avgCpr = totalConversions > 0 ? totalSpend / totalConversions : null;
 
-  // ROAS
-  let roasValue = null;
+  // ROAS — two values: total (all sales PV / spend) and attributed (tagged PV / spend)
+  let totalRoas = null;
+  let attrRoas = null;
   let attrPct = 0;
   if (roasData) {
-    const totalPv = (roasData.ads || []).reduce((s, r) => s + (r.attributed_pv || 0), 0);
-    roasValue = totalSpend > 0 ? totalPv / totalSpend : null;
+    const attrPv = (roasData.ads || []).reduce((s, r) => s + (r.attributed_pv || 0), 0);
+    attrRoas = totalSpend > 0 ? attrPv / totalSpend : null;
+    totalRoas = totalSpend > 0 && roasData.total_pv ? roasData.total_pv / totalSpend : null;
     attrPct = roasData.attribution_rate ? Math.round(roasData.attribution_rate * 100) : 0;
   }
 
@@ -3119,8 +3121,9 @@ function renderKpiBar(allAds, peAds, roasData, activeCampaigns) {
         </div>
         <div class="kpi-cell">
           <div class="kpi-label">ROAS</div>
-          <div class="kpi-value">${roasValue != null ? roasValue.toFixed(2) + 'x' : '--'}</div>
-          <div class="kpi-sub" style="${attrPct < 80 ? 'color: var(--orange);' : ''}">${attrPct}% attributed</div>
+          <div class="kpi-value">${totalRoas != null ? totalRoas.toFixed(2) + 'x' : '--'}</div>
+          <div class="kpi-sub">total sales PV / spend</div>
+          <div class="kpi-sub" style="margin-top: 2px; ${attrPct < 80 ? 'color: var(--orange);' : ''}">${attrRoas != null ? attrRoas.toFixed(2) + 'x' : '--'} attributed (${attrPct}%)</div>
         </div>
       </div>
     </div>
