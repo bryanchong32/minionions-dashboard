@@ -3076,6 +3076,20 @@ function renderKpiBar(allAds, peAds, roasData, activeCampaigns) {
     seen.add(c.campaign_id);
     dailyBudget += parseFloat(c.daily_budget) || 0;
   });
+
+  // For ABO campaigns (null daily_budget), sum from ad-set budgets in the ads data
+  const aboCampaignIds = new Set();
+  (activeCampaigns || []).forEach(c => {
+    if (!c.daily_budget) aboCampaignIds.add(c.campaign_id);
+  });
+  const adsetBudgetsSeen = new Set();
+  [...(allAds || []), ...(peAds || [])].forEach(ad => {
+    if (aboCampaignIds.has(ad.campaign_id) && ad.adset_id && ad.adset_daily_budget && !adsetBudgetsSeen.has(ad.adset_id)) {
+      adsetBudgetsSeen.add(ad.adset_id);
+      dailyBudget += ad.adset_daily_budget;
+    }
+  });
+
   // API may return cents or RM — heuristic: if >1000, likely cents
   const budgetRM = dailyBudget > 1000 ? dailyBudget / 100 : dailyBudget;
   const capWarning = budgetRM > 1050;
@@ -3136,8 +3150,24 @@ function renderFunnelBar(groups) {
       let adCount = 0, tierBudget = 0, totalSpend = 0, totalMsgs = 0;
       campaigns.forEach(c => {
         const ads = c._ads || [];
-        adCount += ads.length;
-        tierBudget += parseFloat(c.campaign_daily_budget || c.daily_budget) || 0;
+        // For testing/proving: count only ACTIVE ads; for others: count all
+        const activeAds = (t.key === 'testing' || t.key === 'proving')
+          ? ads.filter(a => a.effective_status === 'ACTIVE')
+          : ads;
+        adCount += activeAds.length;
+        // Tier budget: sum ad-set budgets for ABO campaigns (null campaign budget)
+        const campBudget = parseFloat(c.campaign_daily_budget || c.daily_budget) || 0;
+        if (campBudget > 0) {
+          tierBudget += campBudget;
+        } else {
+          const adsetSeen = new Set();
+          ads.forEach(a => {
+            if (a.adset_id && a.adset_daily_budget && !adsetSeen.has(a.adset_id)) {
+              adsetSeen.add(a.adset_id);
+              tierBudget += a.adset_daily_budget;
+            }
+          });
+        }
         totalSpend += parseFloat(c.spend) || 0;
         ads.forEach(a => { totalMsgs += getAdMessages(a); });
       });
@@ -3431,10 +3461,16 @@ function renderTestingSection(testCampaigns, adsByGroup, roasData, activeCampaig
     const spend = parseFloat(c.spend) || 0;
     const msgs = campaignAds.reduce((sum, ad) => sum + getAdMessages(ad), 0) || getCampaignMessages(c);
 
-    // Day calculation from created_time
-    const campaignDay = getCampaignDaysSinceLaunch(c.campaign_id, activeCampaigns) || 1;
+    // Day calculation: for Testing, round start = newest active ad-set creation time
     const meta = (activeCampaigns || []).find(m => String(m.campaign_id) === String(c.campaign_id));
-    const startDate = meta && meta.created_time ? meta.created_time : null;
+    const adsetDates = campaignAds
+      .filter(a => a.adset_created_time && a.effective_status === 'ACTIVE')
+      .map(a => new Date(a.adset_created_time).getTime());
+    const roundStart = adsetDates.length > 0 ? new Date(Math.max(...adsetDates)) : null;
+    const campaignDay = roundStart
+      ? Math.max(1, Math.floor((new Date() - roundStart) / 86400000))
+      : getCampaignDaysSinceLaunch(c.campaign_id, activeCampaigns) || 1;
+    const startDate = roundStart ? roundStart.toISOString() : (meta && meta.created_time ? meta.created_time : null);
     const endDateStr = startDate ? formatDateShort(addDays(startDate, 14)) : '--';
     const startDateStr = startDate ? formatDateShort(startDate) : '--';
 
