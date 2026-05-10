@@ -26,6 +26,10 @@
       --red-bg: #FEF2F2;
       --purple: #7C3AED;
       --purple-bg: #F5F3FF;
+      --pink: #DB2777;
+      --pink-bg: #FDF2F8;
+      --yellow: #CA8A04;
+      --yellow-bg: #FEFCE8;
       --teal: #0D9488;
       --font: 'Outfit', system-ui, sans-serif;
       --mono: 'Geist Mono', 'SF Mono', monospace;
@@ -690,6 +694,169 @@
     .campaign-subtotal div { text-align: right; padding: 0 4px; }
     .campaign-subtotal div:nth-child(2) { text-align: left; }
 
+    /* ===== ADS WORKBENCH (new) ===== */
+    .wb-kpi-bar { display: flex; gap: 12px; margin-bottom: 0; align-items: stretch; }
+    .wb-kpi-bar__metrics { flex: 5; }
+    .wb-kpi-bar__budget { flex: 1; }
+    .budget-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; height: 100%; display: flex; flex-direction: column; justify-content: center; }
+    .kpi-sub { font-family: var(--mono); font-size: 11px; font-weight: 500; margin-top: 2px; color: var(--text-3); }
+    .wb-time-pills { display: flex; gap: 4px; margin: 16px 0; align-items: center; }
+    .pill-sep { color: var(--text-3); font-size: 11px; margin: 0 6px; }
+    .pill-date { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+
+    /* Funnel bar */
+    .funnel-bar { display: flex; background: var(--surface); border: 1px solid var(--border-light); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+    .funnel-tier { flex: 1; padding: 14px 18px; text-align: center; border-right: 1px solid var(--border-light); position: relative; cursor: pointer; transition: background 0.1s; }
+    .funnel-tier:last-child { border-right: none; }
+    .funnel-tier:hover { background: #FAFAFA; }
+    .ft-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .ft-stats { font-family: var(--mono); font-size: 14px; font-weight: 600; }
+    .ft-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .ft-arrow { position: absolute; right: -10px; top: 50%; transform: translateY(-50%); z-index: 1; color: var(--border); font-size: 16px; }
+
+    /* Seasonal */
+    .seasonal-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border-light); cursor: pointer; }
+    .seasonal-head:hover { background: #FAFAFA; }
+    .seasonal-name { font-size: 14px; font-weight: 600; }
+    .seasonal-date { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+    .countdown { font-family: var(--mono); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
+    .countdown--urgent { background: var(--red-bg); color: var(--red); }
+    .countdown--normal { background: var(--green-bg); color: var(--green); }
+
+    /* Collapsible */
+    .collapsible-body { display: none; }
+    .collapsible-body.open { display: block; }
+    .collapsible-toggle { display: flex; align-items: center; gap: 6px; padding: 10px 20px; cursor: pointer; border-bottom: 1px solid var(--border-light); font-size: 12px; font-weight: 500; color: var(--text-2); user-select: none; }
+    .collapsible-toggle:hover { background: #FAFAFA; }
+    .collapsible-toggle .chevron { transition: transform 0.2s; font-size: 12px; color: var(--text-3); }
+    .collapsible-toggle.open .chevron { transform: rotate(90deg); }
+
+    /* KPI mini row */
+    .kpi-mini { display: grid; gap: 1px; background: var(--border-light); }
+    .kpi-mini--5 { grid-template-columns: repeat(5, 1fr); }
+    .kpi-mini .kpi-cell { padding: 12px 16px; }
+    .kpi-mini .kpi-value { font-size: 16px; }
+
+    /* Workbench ad rows (flex-based, simpler than grid-based) */
+    .wb-ad-row { display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-bottom: 1px solid var(--border-light); transition: background 0.1s; }
+    .wb-ad-row:last-child { border-bottom: none; }
+    .wb-ad-row:hover { background: #FAFAFA; }
+    .wb-ad-info { flex: 1; min-width: 0; }
+    .wb-ad-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wb-ad-meta { font-size: 10px; color: var(--text-3); font-family: var(--mono); }
+    .wb-ad-stats { display: flex; gap: 14px; flex-shrink: 0; align-items: center; }
+    .wb-ad-stat { text-align: right; min-width: 50px; }
+    .wb-ad-stat-label { font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; }
+    .wb-ad-stat-value { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+
+    /* Workbench cards */
+    .wb-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: 12px; overflow: hidden; }
+
+    /* Two col layout */
+    .wb-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* Workbench campaign rows */
+    .wb-campaign-row { border-bottom: 1px solid var(--border-light); }
+    .wb-campaign-row:last-child { border-bottom: none; }
+    .wb-campaign-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; transition: background 0.1s; }
+    .wb-campaign-head:hover { background: #FAFAFA; }
+    .wb-campaign-chevron { font-size: 14px; color: var(--text-3); transition: transform 0.2s; flex-shrink: 0; }
+    .wb-campaign-row.expanded .wb-campaign-chevron { transform: rotate(90deg); }
+    .wb-campaign-name-col { flex: 1; min-width: 0; }
+    .wb-campaign-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .wb-campaign-sub { font-size: 10px; color: var(--text-3); }
+    .wb-campaign-stat { text-align: right; min-width: 65px; }
+    .wb-campaign-stat-label { font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; }
+    .wb-campaign-stat-value { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+    .wb-campaign-body { display: none; border-top: 1px solid var(--border-light); }
+    .wb-campaign-row.expanded .wb-campaign-body { display: block; }
+
+    /* CRM badge */
+    .crm-badge { font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; background: var(--yellow-bg); color: var(--yellow); }
+
+    /* Verdict badges (workbench additions) */
+    .verdict--graduate { background: #DBEAFE; color: var(--accent); }
+    .verdict--validating { background: var(--yellow-bg); color: var(--yellow); }
+
+    /* Day tracker */
+    .day-tracker { display: flex; align-items: center; gap: 0; margin: 16px 20px; }
+    .day-node { display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 1; }
+    .day-dot { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; font-weight: 700; border: 2px solid var(--border); background: var(--surface); }
+    .day-dot--done { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+    .day-dot--active { background: #DBEAFE; border-color: var(--accent); color: var(--accent); }
+    .day-dot--upcoming { border-color: var(--border); color: var(--text-3); }
+    .day-label { font-size: 9px; color: var(--text-3); font-family: var(--mono); }
+    .day-line-wrap { flex: 1; position: relative; margin-bottom: 18px; }
+    .day-line-bg { width: 100%; height: 2px; background: var(--border-light); }
+    .day-line-fill { position: absolute; top: 0; left: 0; height: 2px; border-radius: 1px; }
+    .day-line-fill--done { background: var(--green); opacity: 0.4; width: 100%; }
+    .day-line-fill--progress { background: var(--accent); }
+    .pulse-dot { position: absolute; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(37,99,235,0.3); opacity: 1; } 50% { box-shadow: 0 0 0 6px rgba(37,99,235,0); opacity: 0.7; } }
+
+    .day-counter { text-align: center; margin-bottom: 14px; }
+    .day-counter-num { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--accent); }
+    .day-counter-total { font-size: 12px; color: var(--text-3); margin-left: 4px; }
+
+    /* Milestones */
+    .milestones { display: flex; gap: 6px; margin: 0 16px 16px; }
+    .milestone { flex: 1; background: var(--bg); border: 1px solid var(--border-light); border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: border-color 0.15s; }
+    .milestone.active { border-color: var(--accent); background: #EFF6FF; }
+    .milestone--locked { opacity: 0.4; pointer-events: none; }
+    .ms-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; font-weight: 600; margin-bottom: 3px; }
+    .ms-value { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+    .ms-note { font-size: 10px; color: var(--text-3); margin-top: 3px; line-height: 1.3; }
+
+    /* Adset groups */
+    .adset-group { padding: 0 16px 8px; }
+    .adset-label { font-size: 11px; font-weight: 600; color: var(--text-2); margin-bottom: 8px; padding-top: 12px; border-top: 1px solid var(--border-light); }
+    .wb-ad-card { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--border-light); border-radius: 8px; margin-bottom: 4px; transition: background 0.1s; }
+    .wb-ad-card:hover { background: #FAFAFA; }
+
+    /* Reco panel */
+    .reco-panel { margin: 12px 16px 16px; padding: 14px 16px; background: var(--bg); border: 1px dashed var(--border); border-radius: 8px; }
+    .reco-panel--active { border-color: var(--orange); background: var(--orange-bg); }
+    .reco-title { font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .reco-title--orange { color: var(--orange); }
+    .reco-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-light); }
+    .reco-item:last-of-type { border-bottom: none; }
+    .reco-check { width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--border); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; background: var(--surface); }
+    .reco-check.checked { background: var(--accent); border-color: var(--accent); }
+    .reco-check.checked::after { content: '\2713'; color: white; font-size: 11px; font-weight: 700; }
+    .reco-text { font-size: 12px; flex: 1; color: var(--text-2); }
+    .reco-reason { color: var(--text-3); font-size: 11px; }
+    .reco-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+    .budget-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+    .budget-table th { text-align: left; font-size: 10px; color: var(--text-3); text-transform: uppercase; padding: 4px 8px; border-bottom: 1px solid var(--border-light); }
+    .budget-table td { padding: 6px 8px; font-family: var(--mono); border-bottom: 1px solid var(--border-light); }
+    .chg-pos { color: var(--green); }
+    .chg-neg { color: var(--red); }
+    .chg-zero { color: var(--text-3); }
+    .btn--primary:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* PG cards */
+    .pg-card { padding: 14px 16px; border-bottom: 1px solid var(--border-light); }
+    .pg-card:last-of-type { border-bottom: none; }
+    .pg-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .pg-thumb { width: 48px; height: 48px; border-radius: 8px; background: var(--border-light); flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-3); }
+    .pg-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .pg-info { flex: 1; }
+    .pg-name { font-size: 13px; font-weight: 600; }
+    .pg-from { font-size: 10px; color: var(--text-3); }
+    .pg-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px; }
+    .pg-stat-label { font-size: 9px; color: var(--text-3); text-transform: uppercase; }
+    .pg-stat-value { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+    .pg-progress { display: flex; align-items: center; gap: 8px; }
+    .pg-bar-bg { flex: 1; height: 6px; background: var(--border-light); border-radius: 3px; overflow: hidden; }
+    .pg-bar-fill { height: 100%; border-radius: 3px; }
+    .pg-bar-fill--early { background: var(--yellow); }
+    .pg-bar-fill--good { background: var(--green); }
+    .pg-days { font-family: var(--mono); font-size: 10px; color: var(--text-3); white-space: nowrap; }
+
+    .expand-toggle { text-align: center; padding: 8px; font-size: 11px; color: var(--text-3); cursor: pointer; border-top: 1px solid var(--border-light); }
+    .expand-toggle:hover { color: var(--text-2); background: #FAFAFA; }
+    .empty-state { padding: 20px; text-align: center; font-size: 12px; color: var(--text-3); border-top: 1px dashed var(--border-light); margin: 0 16px 16px; }
+
     /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
       .kpi-row--5, .kpi-row--4, .kpi-row--3 { grid-template-columns: repeat(2, 1fr); }
@@ -708,6 +875,15 @@
       .ad-row, .ad-header { grid-template-columns: 40px 1.2fr repeat(5, 1fr); }
       .time-pills { flex-wrap: wrap; }
       .banner-stats { display: none; }
+      .wb-two-col { grid-template-columns: 1fr; }
+      .wb-kpi-bar { flex-direction: column; }
+      .funnel-bar { flex-direction: column; }
+      .funnel-tier { border-right: none; border-bottom: 1px solid var(--border-light); }
+      .funnel-tier:last-child { border-bottom: none; }
+      .ft-arrow { display: none; }
+      .milestones { flex-direction: column; }
+      .pg-stats { grid-template-columns: repeat(3, 1fr); }
+      .kpi-mini--5 { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -1115,90 +1291,12 @@
       </div>
     </div>
 
-    <!-- ===== TAB 3: ADS ===== -->
+    <!-- ===== TAB 3: ADS WORKBENCH ===== -->
     <div class="tab-panel" id="panel-ads">
-      <div id="adsLoading" class="loading">Loading ads data</div>
-      <div id="adsContent" style="display:none;">
-
-        <!-- Top bar -->
-        <div class="ads-top-bar">
-          <div class="ads-top-bar-title">Ad Performance</div>
-          <div class="ads-top-bar-controls">
-            <div class="time-pills" id="adsTimePills">
-              <div class="time-pill" data-range="7d">7d</div>
-              <div class="time-pill" data-range="14d">14d</div>
-              <div class="time-pill" data-range="30d">30d</div>
-              <div class="time-pill active" data-range="mtd">MTD</div>
-            </div>
-            <button class="ads-refresh-btn" id="adsRefreshBtn">Refresh (bypass cache)</button>
-          </div>
+      <div class="content">
+        <div id="adsWorkbench">
+          <div class="loading">Loading ads data</div>
         </div>
-        <div class="ads-cache-note" id="adsCacheNote">Data cached 24hrs. Last updated: --</div>
-
-        <!-- Overview KPIs -->
-        <div class="kpi-row kpi-row--6" id="adsKpiRow">
-          <div class="kpi-cell">
-            <div class="kpi-label">Total Spend</div>
-            <div class="kpi-value" id="ads-total-spend">--</div>
-            <div class="kpi-delta" id="ads-total-spend-note" style="color: var(--text-3);">-- campaigns</div>
-          </div>
-          <div class="kpi-cell">
-            <div class="kpi-label">Messages</div>
-            <div class="kpi-value" id="ads-total-msgs">--</div>
-            <div class="kpi-delta" id="ads-total-msgs-delta"></div>
-          </div>
-          <div class="kpi-cell">
-            <div class="kpi-label">Avg CPR</div>
-            <div class="kpi-value" id="ads-avg-cpr">--</div>
-            <div class="kpi-delta" id="ads-avg-cpr-delta"></div>
-          </div>
-          <div class="kpi-cell">
-            <div class="kpi-label">Avg Frequency</div>
-            <div class="kpi-value" id="ads-avg-freq">--</div>
-            <div class="kpi-delta" id="ads-avg-freq-note"></div>
-          </div>
-          <div class="kpi-cell">
-            <div class="kpi-label">CTR (all)</div>
-            <div class="kpi-value" id="ads-avg-ctr">--</div>
-            <div class="kpi-delta" id="ads-avg-ctr-note" style="color: var(--text-3);"></div>
-          </div>
-          <div class="kpi-cell">
-            <div class="kpi-label">Daily Budget</div>
-            <div class="kpi-value" id="ads-daily-budget">--</div>
-            <div class="kpi-delta" style="color: var(--text-3);">/ RM 1,050 cap</div>
-          </div>
-        </div>
-
-        <!-- SECTION 1: TESTS -->
-        <div class="section-header">
-          <div class="section-dot" style="background: var(--orange);"></div>
-          <div class="section-label">Tests</div>
-          <div class="section-line"></div>
-          <div class="section-note">Proving ground — watch, measure, graduate or kill</div>
-        </div>
-        <div id="adsTestBanner"></div>
-        <div id="adsTestCampaigns"></div>
-
-        <!-- SECTION 2: CONVERSION -->
-        <div class="section-header">
-          <div class="section-dot" style="background: var(--accent);"></div>
-          <div class="section-label">Conversion</div>
-          <div class="section-line"></div>
-          <div class="section-note">Graduated winners — optimized for messages</div>
-        </div>
-        <div id="adsConvBanner"></div>
-        <div id="adsConvCampaigns"></div>
-
-        <!-- SECTION 3: BRANDING -->
-        <div class="section-header">
-          <div class="section-dot" style="background: var(--purple);"></div>
-          <div class="section-label">Branding</div>
-          <div class="section-line"></div>
-          <div class="section-note">Post Engagement — optimized for awareness</div>
-        </div>
-        <div id="adsBrandBanner"></div>
-        <div id="adsBrandCampaigns"></div>
-
       </div>
     </div>
 
@@ -1454,8 +1552,9 @@ function renderEngCard(eng, isNext, isArchived) {
   const track = eng.track || 'repeat';
   if (!eng.track) console.warn('Engagement', eng.id, 'missing track field, defaulting to repeat');
   const status = eng.status || 'planned';
+  const isCancelled = status === 'cancelled';
+  const isDone = status === 'completed' || isCancelled;
   const isFuture = status === 'planned' && !isNext;
-  const isDone = status === 'completed';
 
   const dateStr = eng.planned_date ? (() => {
     const d = new Date(eng.planned_date + 'T00:00:00+08:00');
@@ -1669,7 +1768,7 @@ function renderPlaybook(schedule, isArchived) {
   const allDates = [...new Set(schedule.map(e => e.planned_date).filter(Boolean))].sort();
 
   // Find next-up for each track
-  const findNext = (engs) => engs.find(e => e.status !== 'completed' && e.planned_date >= todayStr);
+  const findNext = (engs) => engs.find(e => e.status !== 'completed' && e.status !== 'cancelled' && e.planned_date >= todayStr);
   const nextRepeat = isArchived ? null : findNext(repeatEngs);
   const nextNew = isArchived ? null : findNext(newEngs);
 
@@ -2688,11 +2787,16 @@ async function saveTarget() {
 
 // ===== TAB 3: ADS =====
 
-function classifyCampaign(campaignName) {
-  const name = (campaignName || '').toLowerCase();
-  if (name.includes('hook test')) return 'test';
-  if (name.includes('omnipresence') || name.startsWith('pe ')) return 'branding';
-  return 'conversion';
+const SEASONAL_KEYWORDS = ['\u96D9\u89AA', '\u65B0\u5E74', '38', '\u8056\u8A95', '\u4E2D\u79CB', '\u96D911'];
+
+function classifyCampaign(name, campaignMeta) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('hook test')) return 'testing';
+  if (n.includes('proving ground')) return 'proving';
+  if (n.includes('omnipresence') || n.startsWith('pe ')) return 'branding';
+  if (SEASONAL_KEYWORDS.some(kw => (name || '').includes(kw))) return 'seasonal';
+  if (campaignMeta && campaignMeta.lifetime_budget && !campaignMeta.daily_budget) return 'seasonal';
+  return 'proven';
 }
 
 function chevronSvg() {
@@ -2738,13 +2842,6 @@ function spendBarColor(pct) {
   if (pct >= 15) return 'var(--green)';
   if (pct >= 8) return 'var(--orange)';
   return 'var(--red)';
-}
-
-function getTestMilestone(daysSinceLaunch) {
-  if (daysSinceLaunch < 3) return { current: `Day ${daysSinceLaunch}`, next: `Day 3: Spend distribution check` };
-  if (daysSinceLaunch < 7) return { current: `Day ${daysSinceLaunch}`, next: `Day 7: Kill/keep decision` };
-  if (daysSinceLaunch < 14) return { current: `Day ${daysSinceLaunch}`, next: `Day 14: Graduate winners` };
-  return { current: `Day ${daysSinceLaunch}`, next: `Ready to graduate` };
 }
 
 function renderThumb(ad) {
