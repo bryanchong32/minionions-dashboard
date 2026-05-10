@@ -3904,6 +3904,30 @@ async function loadAdsTab() {
     const bySpend = (a, b) => (parseFloat(b.spend) || 0) - (parseFloat(a.spend) || 0);
     Object.values(groups).forEach(arr => arr.sort(bySpend));
 
+    // For Testing/Proving campaigns, fetch ALL active ads (including zero-spend)
+    // Insights only returns ads with delivery — new ads won't appear until they spend
+    const testProveCampaigns = [...groups.testing, ...groups.proving];
+    if (testProveCampaigns.length > 0) {
+      const campaignAdFetches = testProveCampaigns.map(c =>
+        apiSafe(`/meta/campaign-ads?campaign_id=${c.campaign_id}`)
+      );
+      const campaignAdResults = await Promise.all(campaignAdFetches);
+      campaignAdResults.forEach((result, idx) => {
+        if (!result || !result.ads) return;
+        const campId = testProveCampaigns[idx].campaign_id;
+        const existing = adsByGroup[campId] ? adsByGroup[campId].ads : [];
+        const existingIds = new Set(existing.map(a => a.ad_id));
+        // Merge zero-spend ads that aren't in insights
+        result.ads.forEach(ad => {
+          if (!existingIds.has(ad.ad_id)) {
+            existing.push(ad);
+          }
+        });
+        if (!adsByGroup[campId]) adsByGroup[campId] = { ads: [] };
+        adsByGroup[campId].ads = existing;
+      });
+    }
+
     // Attach ads to campaigns for funnel bar calculation
     allCampaigns.forEach(c => {
       c._ads = adsByGroup[c.campaign_id] ? adsByGroup[c.campaign_id].ads : [];
