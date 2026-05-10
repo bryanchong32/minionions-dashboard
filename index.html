@@ -175,8 +175,10 @@
     .camp-timeline-node--future { background: var(--surface); border: 2px solid var(--border); box-shadow: none; }
 
     .camp-eng-card { border-radius: 8px; padding: 10px; }
-    .camp-eng-card--done-repeat { border: 1px solid #BBF7D0; background: #F0FDF4; }
-    .camp-eng-card--done-new { border: 1px solid #BFDBFE; background: #EFF6FF; }
+    .camp-eng-card--done-repeat { border: 1px solid #BBF7D0; background: #F0FDF4; cursor: pointer; }
+    .camp-eng-card--done-new { border: 1px solid #BFDBFE; background: #EFF6FF; cursor: pointer; }
+    .camp-eng-card--cancelled { border: 1px solid var(--border); background: var(--border-light); opacity: 0.6; cursor: pointer; }
+    .camp-eng-card--cancelled .camp-eng-card__title { text-decoration: line-through; }
     .camp-eng-card--next { border-width: 2px; border-style: solid; position: relative; }
     .camp-eng-card--next-repeat { border-color: var(--accent); background: #EFF6FF; }
     .camp-eng-card--next-new { border-color: var(--orange); background: var(--orange-bg); }
@@ -1566,13 +1568,17 @@ function renderEngCard(eng, isNext, isArchived) {
   const segNames = (eng.segments || []).map(s => s.replace(/-reorder|-recent/, '').toUpperCase()).join(', ');
   const exclNote = eng.exclude_converted ? ' · excl. converted' : '';
 
-  // Done card
+  // Done / cancelled card (click to expand)
   if (isDone) {
-    const cls = track === 'repeat' ? 'camp-eng-card camp-eng-card--done-repeat' : 'camp-eng-card camp-eng-card--done-new';
-    return `<div class="${cls}">
+    const cls = isCancelled ? 'camp-eng-card camp-eng-card--cancelled'
+      : track === 'repeat' ? 'camp-eng-card camp-eng-card--done-repeat'
+      : 'camp-eng-card camp-eng-card--done-new';
+    const cancelBadge = isCancelled ? ' <span style="font-size:9px; color:var(--text-3); background:var(--border); padding:1px 6px; border-radius:3px; margin-left:4px;">cancelled</span>' : '';
+    return `<div class="${cls}" onclick="this.querySelector('.camp-eng-expand')?.classList.toggle('hidden')">
       <div class="camp-eng-card__date">${dateStr}</div>
-      <div class="camp-eng-card__title">${eng.id.toUpperCase()} · ${escHtml(eng.touchpoint)}</div>
+      <div class="camp-eng-card__title">${eng.id.toUpperCase()} · ${escHtml(eng.touchpoint)}${cancelBadge}</div>
       <div class="camp-eng-card__meta">${segNames}${exclNote}</div>
+      ${eng.reasoning || eng.captions ? '<div class="camp-eng-expand hidden" style="margin-top:8px;">' + renderEngDetails(eng, isArchived) + '</div>' : ''}
     </div>`;
   }
 
