@@ -2905,420 +2905,815 @@ function groupAdsByCampaign(ads) {
   return map;
 }
 
-// Render a single ad row for messages-objective campaigns
-function renderAdRow(ad, campaignTotalSpend, showSpendBar) {
+// ===== ADS WORKBENCH RENDERING =====
+
+function getAdComments(ad) {
+  // Comments from Meta API: action_type comment or onsite_conversion.post_net_comment
+  return parseInt(ad.comments, 10) || 0;
+}
+
+function getAdRoas(ad, roasData) {
+  if (!roasData || !roasData.ads) return null;
+  const match = roasData.ads.find(r => r.ad_id === ad.ad_id);
+  if (!match || !match.attributed_pv) return null;
   const spend = parseFloat(ad.spend) || 0;
-  const msgs = getAdMessages(ad);
-  const cpr = getAdCpr(ad);
-  const freq = parseFloat(ad.frequency) || 0;
-  const ctr = ad.ctr ? parseFloat(ad.ctr) : null;
-  const linkCtr = (ad.ctr_link || ad.inline_link_click_ctr) ? parseFloat(ad.ctr_link || ad.inline_link_click_ctr) : null;
-  const impressions = parseInt(ad.impressions) || 0;
-  const reach = parseInt(ad.reach) || 0;
-  const verdict = getVerdict(cpr, spend);
-  const lowData = spend < 100;
-
-  let spendBarHtml = '';
-  if (showSpendBar && campaignTotalSpend > 0) {
-    const pct = (spend / campaignTotalSpend) * 100;
-    const barColor = spendBarColor(pct);
-    spendBarHtml = `<div class="spend-bar-wrap">
-      <div class="spend-bar-track"><div class="spend-bar-fill" style="width: ${pct.toFixed(0)}%; background: ${barColor};"></div></div>
-      <div class="spend-bar-label"><span>${pct.toFixed(0)}% of CBO spend</span><span>RM ${fmt(spend)}</span></div>
-    </div>`;
-  }
-
-  return `<div class="ad-row"${lowData ? ' style="opacity: 0.6;"' : ''}>
-    ${renderThumb(ad)}
-    <div class="ad-name-cell">
-      <div class="ad-name">${ad.ad_name || '--'}</div>
-      <div class="ad-campaign-label">${spendBarHtml}</div>
-    </div>
-    <div class="ad-metric" style="font-weight: 700;">${fmt(spend)}</div>
-    <div class="ad-metric ${cprClass(cpr)}">${cpr != null ? cpr.toFixed(2) : '--'}</div>
-    <div class="ad-metric">${fmt(msgs)}</div>
-    <div class="ad-metric ${freqClass(freq)}">${freq.toFixed(1)}</div>
-    <div class="ad-metric">${ctr != null ? ctr.toFixed(1) + '%' : '--'}</div>
-    <div class="ad-metric">${linkCtr != null ? linkCtr.toFixed(1) + '%' : '--'}</div>
-    <div class="ad-metric ad-metric--muted">${fmt(impressions)}</div>
-    <div class="ad-metric ad-metric--muted">${fmt(reach)}</div>
-    <div class="ad-metric"><span class="verdict ${verdict.cls}">${verdict.label}</span></div>
-  </div>`;
+  return spend > 0 ? match.attributed_pv / spend : null;
 }
 
-// Render a single ad row for PE/branding campaigns
-function renderPeAdRow(ad) {
-  const spend = parseFloat(ad.spend) || 0;
-  const freq = parseFloat(ad.frequency) || 0;
-  const ctr = ad.ctr ? parseFloat(ad.ctr) : null;
-  const linkCtr = (ad.ctr_link || ad.inline_link_click_ctr) ? parseFloat(ad.ctr_link || ad.inline_link_click_ctr) : null;
-  const impressions = parseInt(ad.impressions) || 0;
-  const reach = parseInt(ad.reach) || 0;
-  const convStarted = parseInt(ad.conversations_started, 10) || parseInt(ad.first_replies, 10) || 0;
-  const comments = parseInt(ad.comments, 10) || 0;
-  const thruplayPct = ad.thruplay_pct ? parseFloat(ad.thruplay_pct) : null;
-
-  return `<div class="ad-row ad-row--pe">
-    ${renderThumb(ad)}
-    <div class="ad-name-cell">
-      <div class="ad-name">${ad.ad_name || '--'}</div>
-    </div>
-    <div class="ad-metric" style="font-weight: 700;">${fmt(spend)}</div>
-    <div class="ad-metric">${fmt(convStarted)}</div>
-    <div class="ad-metric">${fmt(comments)}</div>
-    <div class="ad-metric ${freqClass(freq)}">${freq.toFixed(1)}</div>
-    <div class="ad-metric">${ctr != null ? ctr.toFixed(1) + '%' : '--'}</div>
-    <div class="ad-metric">${linkCtr != null ? linkCtr.toFixed(1) + '%' : '--'}</div>
-    <div class="ad-metric ad-metric--muted">${fmt(impressions)}</div>
-    <div class="ad-metric ad-metric--muted">${thruplayPct != null ? thruplayPct.toFixed(0) + '%' : '--'}</div>
-  </div>`;
+function getCampaignRoas(campaignId, roasData) {
+  if (!roasData || !roasData.ads) return { roas: null, conversions: 0, pv: 0 };
+  const matches = roasData.ads.filter(r => r.campaign_id === campaignId);
+  const pv = matches.reduce((s, r) => s + (r.attributed_pv || 0), 0);
+  const conversions = matches.reduce((s, r) => s + (r.conversions || 0), 0);
+  return { pv, conversions };
 }
 
-function adTableHeader() {
-  return `<div class="ad-header">
-    <div class="ad-header-cell"></div>
-    <div class="ad-header-cell">Hook / Ad</div>
-    <div class="ad-header-cell">Spend</div>
-    <div class="ad-header-cell">CPR</div>
-    <div class="ad-header-cell">Msgs</div>
-    <div class="ad-header-cell">Freq</div>
-    <div class="ad-header-cell">CTR (all)</div>
-    <div class="ad-header-cell">CTR (link)</div>
-    <div class="ad-header-cell">Impress.</div>
-    <div class="ad-header-cell">Reach</div>
-    <div class="ad-header-cell">Verdict</div>
-  </div>`;
+function getCampaignDaysSinceLaunch(campaignId, activeCampaigns) {
+  if (!activeCampaigns) return null;
+  const meta = (Array.isArray(activeCampaigns) ? activeCampaigns : []).find(c => c.campaign_id === campaignId);
+  if (!meta || !meta.created_time) return null;
+  const created = new Date(meta.created_time);
+  const now = new Date();
+  return Math.max(1, Math.floor((now - created) / 86400000));
 }
 
-function peTableHeader() {
-  return `<div class="ad-header ad-header--pe">
-    <div class="ad-header-cell"></div>
-    <div class="ad-header-cell">Ad</div>
-    <div class="ad-header-cell">Spend</div>
-    <div class="ad-header-cell">Conv.</div>
-    <div class="ad-header-cell">Comments</div>
-    <div class="ad-header-cell">Freq</div>
-    <div class="ad-header-cell">CTR (all)</div>
-    <div class="ad-header-cell">CTR (link)</div>
-    <div class="ad-header-cell">Impress.</div>
-    <div class="ad-header-cell">ThruPlay %</div>
-  </div>`;
+function formatDateShort(dateStr) {
+  if (!dateStr) return '--';
+  const d = new Date(dateStr);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[d.getMonth()] + ' ' + d.getDate();
 }
 
-function renderTestSection(testCampaigns, adsByGroup) {
-  const bannerEl = document.getElementById('adsTestBanner');
-  const campaignsEl = document.getElementById('adsTestCampaigns');
-
-  if (!testCampaigns || testCampaigns.length === 0) {
-    bannerEl.innerHTML = `<div class="section-banner section-banner--test">
-      <div class="banner-title" style="color: var(--orange);">No active tests</div>
-    </div>`;
-    campaignsEl.innerHTML = '';
-    return;
-  }
-
-  // Aggregate stats
-  let totalSpend = 0, totalMsgs = 0, totalAds = 0;
-  testCampaigns.forEach(c => {
-    totalSpend += parseFloat(c.spend) || 0;
-    totalMsgs += getCampaignMessages(c);
-    const cAds = adsByGroup[c.campaign_id];
-    totalAds += cAds ? cAds.ads.length : 0;
-  });
-
-  bannerEl.innerHTML = `<div class="section-banner section-banner--test">
-    <div class="banner-title" style="color: var(--orange);">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v6M8 11v.01M14 8a6 6 0 1 1-12 0 6 6 0 0 1 12 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      ${testCampaigns.length} active test${testCampaigns.length !== 1 ? 's' : ''}
-    </div>
-    <div class="banner-stats">
-      <span>RM ${fmt(totalSpend)} spent</span>
-      <span>${totalAds} ad sets</span>
-      <span>${fmt(totalMsgs)} messages</span>
-    </div>
-  </div>`;
-
-  let html = '';
-  testCampaigns.forEach(c => {
-    const spend = parseFloat(c.spend) || 0;
-    const msgs = getCampaignMessages(c);
-    const cpr = getCampaignCpr(c);
-    const freq = parseFloat(c.frequency) || 0;
-    const ctr = c.ctr ? parseFloat(c.ctr) : null;
-    const campaignAds = adsByGroup[c.campaign_id] ? adsByGroup[c.campaign_id].ads : [];
-    const adCount = campaignAds.length;
-
-    // Calculate days since launch (estimate from spend pattern — use current date minus a rough start)
-    // For now, default to showing a sensible milestone based on spend level
-    const daysEstimate = Math.max(1, Math.round(spend / (spend / Math.max(adCount, 1) * 0.5 + 1)));
-    const milestone = getTestMilestone(Math.min(daysEstimate, 30));
-
-    html += `<div class="campaign-row expanded">
-      <div class="campaign-header">
-        ${chevronSvg()}
-        <div class="campaign-name">
-          <span class="status-dot status-dot--active"></span>
-          ${c.campaign_name}
-          <span class="campaign-badge">${adCount} ad set${adCount !== 1 ? 's' : ''}</span>
-        </div>
-        <div class="campaign-metric"><div>RM ${fmt(spend)}</div><div class="campaign-metric-label">Spend</div></div>
-        <div class="campaign-metric"><div style="${cprColorStyle(cpr)}">RM ${cpr != null ? cpr.toFixed(0) : '--'}</div><div class="campaign-metric-label">Avg CPR</div></div>
-        <div class="campaign-metric"><div>${fmt(msgs)}</div><div class="campaign-metric-label">Messages</div></div>
-        <div class="campaign-metric"><div style="${freqColorStyle(freq)}">${freq.toFixed(1)}</div><div class="campaign-metric-label">Freq</div></div>
-        <div class="campaign-metric"><div>${ctr != null ? ctr.toFixed(1) + '%' : '--'}</div><div class="campaign-metric-label">CTR</div></div>
-      </div>
-      <div class="campaign-body">
-        <div class="test-status-bar">
-          <div class="test-day-badge">${milestone.current}</div>
-          <div class="test-status-text">CBO distributing spend across ${adCount} hooks.</div>
-          <div class="test-next-action">Next: ${milestone.next}</div>
-        </div>
-        ${adTableHeader()}
-        ${campaignAds.map(ad => renderAdRow(ad, spend, true)).join('')}
-      </div>
-    </div>`;
-  });
-
-  campaignsEl.innerHTML = html;
-  bindCampaignToggle(campaignsEl);
+function addDays(dateStr, days) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return d;
 }
 
-function renderConversionSection(convCampaigns, adsByGroup) {
-  const bannerEl = document.getElementById('adsConvBanner');
-  const campaignsEl = document.getElementById('adsConvCampaigns');
-
-  if (!convCampaigns || convCampaigns.length === 0) {
-    bannerEl.innerHTML = `<div class="section-banner section-banner--conv">
-      <div class="banner-title" style="color: var(--accent);">No conversion campaigns</div>
-    </div>`;
-    campaignsEl.innerHTML = '';
-    return;
-  }
-
-  let totalSpend = 0, totalMsgs = 0, cprSum = 0, cprCount = 0;
-  convCampaigns.forEach(c => {
-    totalSpend += parseFloat(c.spend) || 0;
-    totalMsgs += getCampaignMessages(c);
-    const cpr = getCampaignCpr(c);
-    if (cpr != null) { cprSum += cpr; cprCount++; }
+// Group ads by ad set within a campaign
+function groupAdsByAdset(ads) {
+  const map = {};
+  (ads || []).forEach(ad => {
+    const key = ad.adset_id || ad.adset_name || 'default';
+    if (!map[key]) map[key] = { adset_name: ad.adset_name || 'Ad Set', adset_id: key, ads: [] };
+    map[key].ads.push(ad);
   });
-  const avgCpr = cprCount > 0 ? cprSum / cprCount : null;
-
-  bannerEl.innerHTML = `<div class="section-banner section-banner--conv">
-    <div class="banner-title" style="color: var(--accent);">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 2l-5.5 5.5M14 2h-4M14 2v4M6 4H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      ${convCampaigns.length} campaign${convCampaigns.length !== 1 ? 's' : ''} active
-    </div>
-    <div class="banner-stats">
-      <span>RM ${fmt(totalSpend)} spent</span>
-      <span>Avg CPR RM ${avgCpr != null ? avgCpr.toFixed(0) : '--'}</span>
-      <span>${fmt(totalMsgs)} messages</span>
-    </div>
-  </div>`;
-
-  let html = '';
-  convCampaigns.forEach(c => {
-    const spend = parseFloat(c.spend) || 0;
-    const msgs = getCampaignMessages(c);
-    const cpr = getCampaignCpr(c);
-    const freq = parseFloat(c.frequency) || 0;
-    const ctr = c.ctr ? parseFloat(c.ctr) : null;
-    const campaignAds = adsByGroup[c.campaign_id] ? adsByGroup[c.campaign_id].ads : [];
-    const adCount = campaignAds.length;
-
-    // Subtotals for expanded view
-    let subSpend = 0, subMsgs = 0;
-    campaignAds.forEach(a => {
-      subSpend += parseFloat(a.spend) || 0;
-      subMsgs += getAdMessages(a);
-    });
-
-    html += `<div class="campaign-row">
-      <div class="campaign-header">
-        ${chevronSvg()}
-        <div class="campaign-name">
-          <span class="status-dot status-dot--active"></span>
-          ${c.campaign_name}
-          <span class="campaign-badge">${adCount} ad${adCount !== 1 ? 's' : ''}</span>
-        </div>
-        <div class="campaign-metric"><div>RM ${fmt(spend)}</div><div class="campaign-metric-label">Spend</div></div>
-        <div class="campaign-metric"><div style="${cprColorStyle(cpr)}">RM ${cpr != null ? cpr.toFixed(0) : '--'}</div><div class="campaign-metric-label">Avg CPR</div></div>
-        <div class="campaign-metric"><div>${fmt(msgs)}</div><div class="campaign-metric-label">Messages</div></div>
-        <div class="campaign-metric"><div style="${freqColorStyle(freq)}">${freq.toFixed(1)}</div><div class="campaign-metric-label">Freq</div></div>
-        <div class="campaign-metric"><div>${ctr != null ? ctr.toFixed(1) + '%' : '--'}</div><div class="campaign-metric-label">CTR</div></div>
-      </div>
-      <div class="campaign-body">
-        ${adTableHeader()}
-        ${campaignAds.map(ad => renderAdRow(ad, spend, false)).join('')}
-        ${campaignAds.length > 0 ? `<div class="campaign-subtotal">
-          <div></div>
-          <div style="text-align: left; font-weight: 600;">Subtotal</div>
-          <div>${fmt(subSpend)}</div>
-          <div>${subMsgs > 0 ? (subSpend / subMsgs).toFixed(2) : '--'}</div>
-          <div>${fmt(subMsgs)}</div>
-          <div></div><div></div><div></div><div></div><div></div><div></div>
-        </div>` : ''}
-      </div>
-    </div>`;
-  });
-
-  campaignsEl.innerHTML = html;
-  bindCampaignToggle(campaignsEl);
+  return Object.values(map);
 }
 
-function renderBrandingSection(brandCampaigns, adsByGroup) {
-  const bannerEl = document.getElementById('adsBrandBanner');
-  const campaignsEl = document.getElementById('adsBrandCampaigns');
-
-  if (!brandCampaigns || brandCampaigns.length === 0) {
-    bannerEl.innerHTML = `<div class="section-banner section-banner--brand">
-      <div class="banner-title" style="color: var(--purple);">No branding campaigns</div>
-    </div>`;
-    campaignsEl.innerHTML = '';
-    return;
-  }
-
-  let totalSpend = 0, totalAds = 0, freqSum = 0, freqCount = 0;
-  brandCampaigns.forEach(c => {
-    totalSpend += parseFloat(c.spend) || 0;
-    const cAds = adsByGroup[c.campaign_id];
-    totalAds += cAds ? cAds.ads.length : 0;
-    const f = parseFloat(c.frequency);
-    if (!isNaN(f)) { freqSum += f; freqCount++; }
-  });
-  const avgFreq = freqCount > 0 ? freqSum / freqCount : null;
-
-  bannerEl.innerHTML = `<div class="section-banner section-banner--brand">
-    <div class="banner-title" style="color: var(--purple);">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l2.47 5.01L16 6.76l-4 3.9.94 5.5L8 13.63l-4.94 2.53.94-5.5-4-3.9 5.53-.75L8 1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      ${brandCampaigns.length} campaign${brandCampaigns.length !== 1 ? 's' : ''} active
-    </div>
-    <div class="banner-stats">
-      <span>RM ${fmt(totalSpend)} spent</span>
-      <span>${totalAds} ad sets</span>
-      <span>Freq ${avgFreq != null ? avgFreq.toFixed(1) : '--'}</span>
-    </div>
-  </div>`;
-
-  let html = '';
-  brandCampaigns.forEach(c => {
-    const spend = parseFloat(c.spend) || 0;
-    const freq = parseFloat(c.frequency) || 0;
-    const ctr = c.ctr ? parseFloat(c.ctr) : null;
-    const campaignAds = adsByGroup[c.campaign_id] ? adsByGroup[c.campaign_id].ads : [];
-    const adCount = campaignAds.length;
-    const engagement = parseInt(c.post_engagement, 10) || (c.actions ? (c.actions.post_engagement || c.actions.page_engagement || 0) : 0);
-    const convStarted = parseInt(c.conversations_started, 10) || parseInt(c.first_replies, 10) || (c.actions ? (c.actions.messaging_first_reply || 0) : 0);
-
-    html += `<div class="campaign-row">
-      <div class="campaign-header">
-        ${chevronSvg()}
-        <div class="campaign-name">
-          <span class="status-dot status-dot--active"></span>
-          ${c.campaign_name}
-          <span class="campaign-badge">${adCount} ad set${adCount !== 1 ? 's' : ''}</span>
-        </div>
-        <div class="campaign-metric"><div>RM ${fmt(spend)}</div><div class="campaign-metric-label">Spend</div></div>
-        <div class="campaign-metric"><div>${fmt(engagement)}</div><div class="campaign-metric-label">Engagement</div></div>
-        <div class="campaign-metric"><div>${fmt(convStarted)}</div><div class="campaign-metric-label">Conv. Started</div></div>
-        <div class="campaign-metric"><div style="${freqColorStyle(freq)}">${freq.toFixed(1)}</div><div class="campaign-metric-label">Freq</div></div>
-        <div class="campaign-metric"><div>${ctr != null ? ctr.toFixed(1) + '%' : '--'}</div><div class="campaign-metric-label">CTR</div></div>
-      </div>
-      <div class="campaign-body">
-        ${peTableHeader()}
-        ${campaignAds.map(ad => renderPeAdRow(ad)).join('')}
-      </div>
-    </div>`;
-  });
-
-  campaignsEl.innerHTML = html;
-  bindCampaignToggle(campaignsEl);
-}
-
-function bindCampaignToggle(container) {
-  container.querySelectorAll('.campaign-header').forEach(header => {
-    header.addEventListener('click', () => {
-      const row = header.closest('.campaign-row');
-      row.classList.toggle('expanded');
-    });
-  });
-}
-
-function renderAdsOverviewKpis(allCampaigns, daysInRange, allAds) {
-  let totalSpend = 0, totalMsgs = 0, cprSum = 0, cprCount = 0;
-  let freqSum = 0, freqCount = 0, ctrSum = 0, ctrCount = 0;
-  let campaignCount = 0;
-
-  allCampaigns.forEach(c => {
-    campaignCount++;
-    totalSpend += parseFloat(c.spend) || 0;
-    const f = parseFloat(c.frequency);
-    if (!isNaN(f)) { freqSum += f; freqCount++; }
-    const ct = parseFloat(c.ctr);
-    if (!isNaN(ct)) { ctrSum += ct; ctrCount++; }
-  });
-
-  // Aggregate messages + CPR from ad-level data (campaign-insights doesn't have message counts)
+// === SECTION 1: KPI Bar ===
+function renderKpiBar(allAds, peAds, roasData, activeCampaigns) {
+  // Total Spend = sum of ALL ads (REPLIES + PE)
+  let totalSpend = 0, totalMsgs = 0, totalComments = 0;
   (allAds || []).forEach(ad => {
-    const msgs = getAdMessages(ad);
-    totalMsgs += msgs;
-    const cpr = getAdCpr(ad);
-    if (cpr != null && msgs > 0) { cprSum += cpr; cprCount++; }
+    totalSpend += parseFloat(ad.spend) || 0;
+    totalMsgs += getAdMessages(ad);
+    totalComments += getAdComments(ad);
+  });
+  (peAds || []).forEach(ad => {
+    totalSpend += parseFloat(ad.spend) || 0;
+    totalComments += getAdComments(ad);
   });
 
-  const avgCpr = cprCount > 0 ? cprSum / cprCount : null;
-  const avgFreq = freqCount > 0 ? freqSum / freqCount : null;
-  const avgCtr = ctrCount > 0 ? ctrSum / ctrCount : null;
-  const dailyBudget = daysInRange > 0 ? totalSpend / daysInRange : 0;
+  const totalConversions = totalMsgs + totalComments;
+  const avgCpr = totalConversions > 0 ? totalSpend / totalConversions : null;
 
-  document.getElementById('ads-total-spend').textContent = 'RM ' + fmt(totalSpend);
-  document.getElementById('ads-total-spend-note').textContent = campaignCount + ' campaigns';
-  document.getElementById('ads-total-msgs').textContent = fmt(totalMsgs);
-  document.getElementById('ads-avg-cpr').textContent = avgCpr != null ? 'RM ' + avgCpr.toFixed(0) : '--';
-  document.getElementById('ads-avg-freq').textContent = avgFreq != null ? avgFreq.toFixed(2) : '--';
-
-  const freqNoteEl = document.getElementById('ads-avg-freq-note');
-  if (avgFreq != null && avgFreq < 2) {
-    freqNoteEl.textContent = 'Healthy';
-    freqNoteEl.className = 'kpi-delta up';
-  } else if (avgFreq != null) {
-    freqNoteEl.textContent = 'High';
-    freqNoteEl.className = 'kpi-delta down';
+  // ROAS
+  let roasValue = null;
+  let attrPct = 0;
+  if (roasData) {
+    const totalPv = (roasData.ads || []).reduce((s, r) => s + (r.attributed_pv || 0), 0);
+    roasValue = totalSpend > 0 ? totalPv / totalSpend : null;
+    attrPct = roasData.attribution_rate ? Math.round(roasData.attribution_rate * 100) : 0;
   }
 
-  document.getElementById('ads-avg-ctr').textContent = avgCtr != null ? avgCtr.toFixed(1) + '%' : '--';
-  document.getElementById('ads-daily-budget').textContent = 'RM ' + fmt(dailyBudget);
+  // Daily budget from active campaigns (deduplicated)
+  let dailyBudget = 0;
+  const seen = new Set();
+  (activeCampaigns || []).forEach(c => {
+    if (seen.has(c.campaign_id)) return;
+    seen.add(c.campaign_id);
+    dailyBudget += parseFloat(c.daily_budget) || 0;
+  });
+  // API may return cents or RM — heuristic: if >1000, likely cents
+  const budgetRM = dailyBudget > 1000 ? dailyBudget / 100 : dailyBudget;
+  const capWarning = budgetRM > 1050;
+
+  return `<div class="wb-kpi-bar">
+    <div class="wb-kpi-bar__metrics">
+      <div class="kpi-row kpi-row--5">
+        <div class="kpi-cell">
+          <div class="kpi-label">Total Spend</div>
+          <div class="kpi-value">RM ${fmt(totalSpend)}</div>
+          <div class="kpi-sub">${adsTimeRange === 'mtd' ? 'month to date' : adsTimeRange + ' window'}</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="kpi-label">Messages</div>
+          <div class="kpi-value">${fmt(totalMsgs)}</div>
+          <div class="kpi-sub">conversations started</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="kpi-label">Comments</div>
+          <div class="kpi-value">${fmt(totalComments)}</div>
+          <div class="kpi-sub">post comments (Meta)</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="kpi-label">Avg CPR</div>
+          <div class="kpi-value" style="${avgCpr != null ? cprColorStyle(avgCpr) : ''}">RM ${avgCpr != null ? avgCpr.toFixed(2) : '--'}</div>
+          <div class="kpi-sub">spend / (msgs + comments)</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="kpi-label">ROAS</div>
+          <div class="kpi-value">${roasValue != null ? roasValue.toFixed(2) + 'x' : '--'}</div>
+          <div class="kpi-sub" style="${attrPct < 80 ? 'color: var(--orange);' : ''}">${attrPct}% attributed</div>
+        </div>
+      </div>
+    </div>
+    <div class="wb-kpi-bar__budget">
+      <div class="budget-card">
+        <div class="kpi-label">Daily Budget</div>
+        <div class="kpi-value">RM ${fmt(budgetRM)}</div>
+        <div class="kpi-sub" style="${capWarning ? 'color: var(--orange);' : ''}">
+          ${capWarning ? 'cap RM 1,050 (+' + fmt(budgetRM - 1050) + ' over)' : '/ RM 1,050 cap'}
+        </div>
+      </div>
+    </div>
+  </div>`;
 }
 
-async function loadAdsTab() {
-  const loading = document.getElementById('adsLoading');
-  const content = document.getElementById('adsContent');
-  loading.style.display = 'block';
-  loading.className = 'loading';
-  loading.textContent = 'Loading ads data';
-  content.style.display = 'none';
+// === SECTION 2: Funnel Bar ===
+function renderFunnelBar(groups) {
+  const tiers = [
+    { key: 'testing', label: 'Testing (M)', color: 'var(--orange)' },
+    { key: 'proving', label: 'Proving Ground (M)', color: 'var(--yellow)' },
+    { key: 'proven', label: 'Proven (M)', color: 'var(--green)' },
+  ];
 
-  try {
-    // Build date range params based on selected time pill
-    let dateParams = `month=${selectedMonth}`;
-    const range = typeof adsTimeRange !== 'undefined' ? adsTimeRange : 'mtd';
-    if (range !== 'mtd') {
-      const today = new Date();
-      const until = today.toISOString().split('T')[0];
-      const daysBack = range === '7d' ? 7 : range === '14d' ? 14 : 30;
-      const sinceDate = new Date(today.getTime() - daysBack * 86400000);
-      const since = sinceDate.toISOString().split('T')[0];
-      dateParams = `since=${since}&until=${until}`;
+  return `<div class="funnel-bar">
+    ${tiers.map((t, i) => {
+      const campaigns = groups[t.key] || [];
+      let adCount = 0, tierBudget = 0, totalSpend = 0, totalMsgs = 0;
+      campaigns.forEach(c => {
+        const ads = c._ads || [];
+        adCount += ads.length;
+        tierBudget += parseFloat(c.campaign_daily_budget || c.daily_budget) || 0;
+        totalSpend += parseFloat(c.spend) || 0;
+        ads.forEach(a => { totalMsgs += getAdMessages(a); });
+      });
+      const cpr = totalMsgs > 0 ? totalSpend / totalMsgs : null;
+      const arrow = i < tiers.length - 1 ? '<span class="ft-arrow">\u2192</span>' : '';
+
+      return `<div class="funnel-tier" data-scroll-to="${t.key}-section">
+        <div class="ft-label" style="color: ${t.color};">${t.label}</div>
+        <div class="ft-stats">${adCount} ad${adCount !== 1 ? 's' : ''} \u00B7 RM${fmt(tierBudget)}/d</div>
+        <div class="ft-sub">CPR RM${cpr != null ? cpr.toFixed(0) : '--'} \u00B7 ${fmt(totalMsgs)} msgs</div>
+        ${arrow}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// === SECTION 3: Seasonal ===
+function renderSeasonalSection(seasonalCampaigns, adsByGroup, roasData, activeCampaigns) {
+  if (!seasonalCampaigns || seasonalCampaigns.length === 0) return '';
+
+  let html = `<div class="section-header" style="margin-top: 0;">
+    <div class="section-dot" style="background: var(--pink);"></div>
+    <span class="section-label" style="color: var(--pink);">Seasonal</span>
+    <div class="section-line"></div>
+    <span class="section-note">${seasonalCampaigns.length} active campaign${seasonalCampaigns.length !== 1 ? 's' : ''}</span>
+  </div>`;
+
+  seasonalCampaigns.forEach(c => {
+    const campaignId = c.campaign_id;
+    const campaignAds = adsByGroup[campaignId] ? adsByGroup[campaignId].ads : [];
+    const spend = parseFloat(c.spend) || 0;
+    const msgs = getCampaignMessages(c);
+    const { pv, conversions } = getCampaignRoas(campaignId, roasData);
+    const roas = spend > 0 && pv > 0 ? pv / spend : null;
+
+    // Countdown
+    const meta = (activeCampaigns || []).find(m => m.campaign_id === campaignId);
+    let countdownHtml = '';
+    if (meta && meta.lifetime_budget && meta.created_time) {
+      const daysActive = getCampaignDaysSinceLaunch(campaignId, activeCampaigns) || 1;
+      const dailySpendRate = spend / daysActive;
+      const remainingBudget = (parseFloat(meta.lifetime_budget) || 0) - spend;
+      const daysLeft = dailySpendRate > 0 ? Math.ceil(remainingBudget / dailySpendRate) : 30;
+      const cls = daysLeft <= 14 ? 'countdown--urgent' : 'countdown--normal';
+      countdownHtml = `<div class="countdown ${cls}">${daysLeft} days left</div>`;
     }
 
-    // Fetch campaign + ad level data in parallel
-    const [campaignData, msgAds, peAds] = await Promise.all([
+    const dailyBudget = parseFloat(c.campaign_daily_budget || c.daily_budget) || 0;
+    const dateRange = meta && meta.created_time ? `${formatDateShort(meta.created_time)} \u2013 ongoing` : '';
+
+    // Group sub-campaigns by (P)/(V) prefix
+    const pAds = campaignAds.filter(a => (a.ad_name || '').startsWith('(P)'));
+    const vAds = campaignAds.filter(a => (a.ad_name || '').startsWith('(V)'));
+    const otherAds = campaignAds.filter(a => !(a.ad_name || '').startsWith('(P)') && !(a.ad_name || '').startsWith('(V)'));
+
+    const attrPct = roasData ? Math.round((roasData.attribution_rate || 0) * 100) : 0;
+
+    html += `<div class="wb-card" style="margin-bottom: 8px;">
+      <div class="seasonal-head" data-toggle="seasonal-${campaignId}">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="chevron" style="font-size: 14px; color: var(--text-3); transition: transform 0.2s;">\u203A</span>
+          <div>
+            <div class="seasonal-name">${c.campaign_name}</div>
+            <div class="seasonal-date">${dateRange}${dailyBudget > 0 ? ' \u00B7 RM' + fmt(dailyBudget) + '/day total' : ''}</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 12px; color: var(--text-2); font-family: var(--mono);">${conversions} orders \u00B7 ${fmt(pv)} PV${roas ? ' \u00B7 ROAS ' + roas.toFixed(2) + 'x' : ''}</span>
+          ${countdownHtml}
+        </div>
+      </div>
+      <div class="collapsible-body" id="seasonal-${campaignId}">
+        <div class="kpi-mini kpi-mini--5">
+          <div class="kpi-cell"><div class="kpi-label">Orders</div><div class="kpi-value" style="font-size:16px;">${conversions}</div></div>
+          <div class="kpi-cell"><div class="kpi-label">Total PV</div><div class="kpi-value" style="font-size:16px;">${fmt(pv)}</div></div>
+          <div class="kpi-cell"><div class="kpi-label">Msgs Started</div><div class="kpi-value" style="font-size:16px;">${fmt(msgs)}</div></div>
+          <div class="kpi-cell"><div class="kpi-label">Spend</div><div class="kpi-value" style="font-size:16px;">RM ${fmt(spend)}</div></div>
+          <div class="kpi-cell"><div class="kpi-label">ROAS</div><div class="kpi-value" style="font-size:16px;">${roas ? roas.toFixed(2) + 'x' : '--'}</div><div class="kpi-sub" style="color:var(--orange);">${attrPct}% attributed</div></div>
+        </div>
+      </div>`;
+
+    // Render sub-campaign groups
+    function renderSubGroup(label, ads, maxShow) {
+      if (ads.length === 0) return '';
+      let out = `<div style="padding: 6px 16px 4px; font-size: 11px; font-weight: 600; color: var(--text-2); border-top: 1px solid var(--border-light);">${label} \u2014 ${ads.length} ad${ads.length !== 1 ? 's' : ''}</div>`;
+      const showAds = ads.slice(0, maxShow);
+      const restCount = ads.length - maxShow;
+      showAds.forEach(ad => {
+        const adSpend = parseFloat(ad.spend) || 0;
+        const adMsgs = getAdMessages(ad);
+        const adCpr = adMsgs > 0 ? adSpend / adMsgs : null;
+        const adRoas = getAdRoas(ad, roasData);
+        const lowData = adSpend < 100 && adMsgs === 0;
+        out += `<div class="wb-ad-row"${lowData ? ' style="opacity: 0.6;"' : ''}>
+          ${renderThumb(ad)}
+          <div class="wb-ad-info"><div class="wb-ad-name">${ad.ad_name || '--'}</div>${ad.adset_name ? '<div class="wb-ad-meta">Ad set: ' + ad.adset_name + '</div>' : ''}</div>
+          <div class="wb-ad-stats">
+            <div class="wb-ad-stat"><div class="wb-ad-stat-label">Spend</div><div class="wb-ad-stat-value">RM ${fmt(adSpend)}</div></div>
+            <div class="wb-ad-stat"><div class="wb-ad-stat-label">Conv</div><div class="wb-ad-stat-value">${fmt(adMsgs)}</div></div>
+            <div class="wb-ad-stat"><div class="wb-ad-stat-label">CPR</div><div class="wb-ad-stat-value" style="${adCpr != null ? cprColorStyle(adCpr) : ''}">RM ${adCpr != null ? adCpr.toFixed(0) : '\u2014'}</div></div>
+            <div class="wb-ad-stat"><div class="wb-ad-stat-label">ROAS</div><div class="wb-ad-stat-value">${adRoas != null ? adRoas.toFixed(1) + 'x' : '\u2014'}</div></div>
+          </div>
+        </div>`;
+      });
+      if (restCount > 0) {
+        out += `<div class="expand-toggle" data-expand="true">+${restCount} more ad${restCount !== 1 ? 's' : ''} \u25BE</div>`;
+      }
+      return out;
+    }
+
+    if (pAds.length > 0) html += renderSubGroup('(P) ABO', pAds, 3);
+    if (vAds.length > 0) html += renderSubGroup('(V) CBO', vAds, 3);
+    if (otherAds.length > 0) html += renderSubGroup('Other', otherAds, 3);
+
+    html += '</div>'; // close wb-card
+  });
+
+  return html;
+}
+
+// === SECTION 4a: Branding (PE) ===
+function renderBrandingSectionWb(brandCampaigns, adsByGroup) {
+  let html = `<div>
+    <div class="section-header" style="margin-top: 0;">
+      <div class="section-dot" style="background: var(--purple);"></div>
+      <span class="section-label" style="color: var(--purple);">Branding (PE)</span>
+      <div class="section-line"></div>`;
+
+  let totalBudget = 0;
+  (brandCampaigns || []).forEach(c => { totalBudget += parseFloat(c.campaign_daily_budget || c.daily_budget) || 0; });
+  html += `<span class="section-note">RM${fmt(totalBudget)}/d</span></div>`;
+
+  if (!brandCampaigns || brandCampaigns.length === 0) {
+    html += `<div class="wb-card"><div class="empty-state">No branding campaigns active</div></div></div>`;
+    return html;
+  }
+
+  brandCampaigns.forEach(c => {
+    const campaignAds = adsByGroup[c.campaign_id] ? adsByGroup[c.campaign_id].ads : [];
+    const adCount = campaignAds.length;
+    const totalImpr = campaignAds.reduce((s, a) => s + (parseInt(a.impressions) || 0), 0);
+    const totalEngagement = campaignAds.reduce((s, a) => s + (parseInt(a.post_engagement, 10) || 0), 0);
+
+    html += `<div class="wb-card">
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-light);">
+        <div style="font-size: 13px; font-weight: 600;">${c.campaign_name}</div>
+        <div style="font-size: 11px; color: var(--text-3);">${totalImpr > 1000 ? (totalImpr / 1000).toFixed(0) + 'k' : fmt(totalImpr)} impressions \u00B7 ${totalEngagement > 1000 ? (totalEngagement / 1000).toFixed(0) + 'k' : fmt(totalEngagement)} engagements</div>
+      </div>`;
+
+    const showAds = campaignAds.slice(0, 3);
+    const restCount = adCount - 3;
+    showAds.forEach(ad => {
+      const adSpend = parseFloat(ad.spend) || 0;
+      const engagement = parseInt(ad.post_engagement, 10) || 0;
+      const comments = getAdComments(ad);
+      const saves = parseInt(ad.saves, 10) || 0;
+      const ctr = ad.ctr ? parseFloat(ad.ctr) : null;
+      const impr = parseInt(ad.impressions) || 0;
+
+      html += `<div class="wb-ad-row">
+        ${renderThumb(ad)}
+        <div class="wb-ad-info">
+          <div class="wb-ad-name">${ad.ad_name || '--'}</div>
+          <div class="wb-ad-meta">${impr > 1000 ? (impr / 1000).toFixed(1) + 'k' : fmt(impr)} impr</div>
+        </div>
+        <div class="wb-ad-stats">
+          <div class="wb-ad-stat"><div class="wb-ad-stat-label">Spend</div><div class="wb-ad-stat-value">RM ${fmt(adSpend)}</div></div>
+          <div class="wb-ad-stat"><div class="wb-ad-stat-label">Engage</div><div class="wb-ad-stat-value">${engagement > 1000 ? (engagement / 1000).toFixed(1) + 'k' : fmt(engagement)}</div></div>
+          <div class="wb-ad-stat"><div class="wb-ad-stat-label">Comments</div><div class="wb-ad-stat-value">${comments > 0 ? fmt(comments) : '\u2014'}</div></div>
+          <div class="wb-ad-stat"><div class="wb-ad-stat-label">Saves</div><div class="wb-ad-stat-value">${fmt(saves)}</div></div>
+          <div class="wb-ad-stat"><div class="wb-ad-stat-label">CTR</div><div class="wb-ad-stat-value">${ctr != null ? ctr.toFixed(1) + '%' : '\u2014'}</div></div>
+        </div>
+      </div>`;
+    });
+
+    if (restCount > 0) {
+      html += `<div class="expand-toggle" data-expand="true">+${restCount} more ad${restCount !== 1 ? 's' : ''} \u25BE</div>`;
+    }
+    html += '</div>';
+  });
+
+  html += '</div>';
+  return html;
+}
+
+// === SECTION 4b: Proven (M) ===
+function renderProvenSection(provenCampaigns, adsByGroup, roasData) {
+  let totalBudget = 0, totalAds = 0;
+  (provenCampaigns || []).forEach(c => {
+    totalBudget += parseFloat(c.campaign_daily_budget || c.daily_budget) || 0;
+    const ads = adsByGroup[c.campaign_id] ? adsByGroup[c.campaign_id].ads : [];
+    totalAds += ads.length;
+  });
+
+  let html = `<div>
+    <div class="section-header" style="margin-top: 0;">
+      <div class="section-dot" style="background: var(--green);"></div>
+      <span class="section-label" style="color: var(--green);">Proven (M)</span>
+      <div class="section-line"></div>
+      <span class="section-note">RM${fmt(totalBudget)}/d \u00B7 ${totalAds} ads</span>
+    </div>`;
+
+  if (!provenCampaigns || provenCampaigns.length === 0) {
+    html += `<div class="wb-card"><div class="empty-state">No proven campaigns active</div></div></div>`;
+    return html;
+  }
+
+  html += '<div class="wb-card">';
+  provenCampaigns.forEach(c => {
+    const campaignAds = adsByGroup[c.campaign_id] ? adsByGroup[c.campaign_id].ads : [];
+    const adCount = campaignAds.length;
+    const spend = parseFloat(c.spend) || 0;
+    const msgs = getCampaignMessages(c);
+    const cpr = msgs > 0 ? spend / msgs : getCampaignCpr(c);
+    const { pv, conversions } = getCampaignRoas(c.campaign_id, roasData);
+    const roas = spend > 0 && pv > 0 ? pv / spend : null;
+    const budget = parseFloat(c.campaign_daily_budget || c.daily_budget) || 0;
+    const typeLabel = adCount <= 1 ? 'Solo' : 'Multi-ad';
+
+    // CRM badge
+    let crmBadgeHtml = '';
+    if (conversions > 0) {
+      crmBadgeHtml = `<span class="crm-badge">${conversions} CRM order${conversions !== 1 ? 's' : ''} \u00B7 RM${fmt(pv)} PV</span>`;
+    }
+
+    html += `<div class="wb-campaign-row" data-campaign-id="${c.campaign_id}">
+      <div class="wb-campaign-head">
+        <span class="wb-campaign-chevron">\u203A</span>
+        <div class="wb-campaign-name-col">
+          <div class="wb-campaign-name">${c.campaign_name} ${crmBadgeHtml}</div>
+          <div class="wb-campaign-sub">${typeLabel} \u00B7 RM${fmt(budget)}/d</div>
+        </div>
+        <div class="wb-campaign-stat"><div class="wb-campaign-stat-label">Spend</div><div class="wb-campaign-stat-value">RM ${fmt(spend)}</div></div>
+        <div class="wb-campaign-stat"><div class="wb-campaign-stat-label">Conv</div><div class="wb-campaign-stat-value">${fmt(msgs)}</div></div>
+        <div class="wb-campaign-stat"><div class="wb-campaign-stat-label">CPR</div><div class="wb-campaign-stat-value" style="${cpr != null ? cprColorStyle(cpr) : ''}">RM ${cpr != null ? cpr.toFixed(0) : '--'}</div></div>
+        <div class="wb-campaign-stat"><div class="wb-campaign-stat-label">ROAS</div><div class="wb-campaign-stat-value"${roas && roas > 2 ? ' style="color: var(--green);"' : ''}>${roas != null ? roas.toFixed(1) + 'x' : '--'}</div></div>
+      </div>
+      <div class="wb-campaign-body">
+        ${campaignAds.map(ad => {
+          const adSpend = parseFloat(ad.spend) || 0;
+          const adMsgs = getAdMessages(ad);
+          const adCpr = adMsgs > 0 ? adSpend / adMsgs : null;
+          const adRoas = getAdRoas(ad, roasData);
+          return `<div class="wb-ad-row">
+            ${renderThumb(ad)}
+            <div class="wb-ad-info"><div class="wb-ad-name">${ad.ad_name || '--'}</div></div>
+            <div class="wb-ad-stats">
+              <div class="wb-ad-stat"><div class="wb-ad-stat-label">Spend</div><div class="wb-ad-stat-value">RM ${fmt(adSpend)}</div></div>
+              <div class="wb-ad-stat"><div class="wb-ad-stat-label">Conv</div><div class="wb-ad-stat-value">${fmt(adMsgs)}</div></div>
+              <div class="wb-ad-stat"><div class="wb-ad-stat-label">CPR</div><div class="wb-ad-stat-value" style="${adCpr != null ? cprColorStyle(adCpr) : ''}">RM ${adCpr != null ? adCpr.toFixed(0) : '\u2014'}</div></div>
+              <div class="wb-ad-stat"><div class="wb-ad-stat-label">ROAS</div><div class="wb-ad-stat-value">${adRoas != null ? adRoas.toFixed(1) + 'x' : '\u2014'}</div></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  });
+  html += '</div></div>';
+  return html;
+}
+
+// === SECTION 5a: Testing (M) ===
+function renderTestingSection(testCampaigns, adsByGroup, roasData, activeCampaigns) {
+  let totalBudget = 0;
+  (testCampaigns || []).forEach(c => { totalBudget += parseFloat(c.campaign_daily_budget || c.daily_budget) || 0; });
+
+  let html = `<div id="testing-section">
+    <div class="section-header" style="margin-top: 0;">
+      <div class="section-dot" style="background: var(--orange);"></div>
+      <span class="section-label" style="color: var(--orange);">Testing (M)</span>
+      <div class="section-line"></div>
+      <span class="section-note">RM${fmt(totalBudget)}/d</span>
+    </div>`;
+
+  if (!testCampaigns || testCampaigns.length === 0) {
+    html += `<div class="wb-card"><div class="empty-state">No active tests running</div></div></div>`;
+    return html;
+  }
+
+  testCampaigns.forEach(c => {
+    const campaignAds = adsByGroup[c.campaign_id] ? adsByGroup[c.campaign_id].ads : [];
+    const spend = parseFloat(c.spend) || 0;
+    const msgs = getCampaignMessages(c);
+
+    // Day calculation from created_time
+    const campaignDay = getCampaignDaysSinceLaunch(c.campaign_id, activeCampaigns) || 1;
+    const meta = (activeCampaigns || []).find(m => m.campaign_id === c.campaign_id);
+    const startDate = meta && meta.created_time ? meta.created_time : null;
+    const endDateStr = startDate ? formatDateShort(addDays(startDate, 14)) : '--';
+    const startDateStr = startDate ? formatDateShort(startDate) : '--';
+
+    // Milestone dates
+    const day3Date = startDate ? formatDateShort(addDays(startDate, 3)) : '--';
+    const day7Date = startDate ? formatDateShort(addDays(startDate, 7)) : '--';
+    const day14Date = startDate ? formatDateShort(addDays(startDate, 14)) : '--';
+
+    // Day tracker milestone states
+    const day3Done = campaignDay >= 3;
+    const day7Done = campaignDay >= 7;
+    const day14Done = campaignDay >= 14;
+
+    // Pulse position between milestones
+    let pulseSegment = 0; // 0 = before day3, 1 = 3-7, 2 = 7-14
+    let pulsePercent = 0;
+    if (campaignDay < 3) {
+      pulseSegment = 0;
+      pulsePercent = Math.min(100, (campaignDay / 3) * 100);
+    } else if (campaignDay < 7) {
+      pulseSegment = 1;
+      pulsePercent = Math.min(100, ((campaignDay - 3) / 4) * 100);
+    } else if (campaignDay < 14) {
+      pulseSegment = 2;
+      pulsePercent = Math.min(100, ((campaignDay - 7) / 7) * 100);
+    }
+
+    // Day tracker node classes
+    const dot3Class = day3Done ? 'day-dot--done' : (pulseSegment === 0 ? 'day-dot--active' : 'day-dot--upcoming');
+    const dot7Class = day7Done ? 'day-dot--done' : (pulseSegment === 1 ? 'day-dot--active' : 'day-dot--upcoming');
+    const dot14Class = day14Done ? 'day-dot--done' : (pulseSegment === 2 ? 'day-dot--active' : 'day-dot--upcoming');
+
+    // Line segments between milestones
+    function lineSegment(segIdx) {
+      if (day14Done || segIdx < pulseSegment) {
+        return `<div class="day-line-wrap"><div class="day-line-bg"></div><div class="day-line-fill day-line-fill--done"></div></div>`;
+      } else if (segIdx === pulseSegment) {
+        return `<div class="day-line-wrap"><div class="day-line-bg"></div><div class="day-line-fill day-line-fill--progress" style="width: ${pulsePercent.toFixed(0)}%;"><div class="pulse-dot" style="right: -4px;"></div></div></div>`;
+      } else {
+        return `<div class="day-line-wrap"><div class="day-line-bg"></div></div>`;
+      }
+    }
+
+    // Milestone snapshot tabs
+    const day3Note = day3Done ? 'CBO distributing. No action.' : 'Spend distribution check';
+    const day7Note = day7Done || (campaignDay >= 3 && campaignDay < 7) ? 'Kill RM100+ / 0 msgs hooks' : 'Kill/keep decision';
+    const day14Note = 'Graduate or kill all hooks';
+
+    function milestoneTab(label, isDone, isActive, isLocked, note) {
+      const cls = isActive ? 'milestone active' : (isLocked ? 'milestone milestone--locked' : 'milestone');
+      const checkmark = isDone ? ' \u2713' : '';
+      return `<div class="${cls}">
+        <div class="ms-label">${label}${checkmark}</div>
+        <div class="ms-value">${isDone || isActive ? 'RM ' + fmt(spend) + ' \u00B7 ' + fmt(msgs) + ' msgs' : '\u2014'}</div>
+        <div class="ms-note">${note}</div>
+      </div>`;
+    }
+
+    // Group ads by ad set
+    const adsetGroups = groupAdsByAdset(campaignAds);
+
+    html += `<div class="wb-card">
+      <div style="padding: 14px 16px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between;">
+        <div style="font-size: 13px; font-weight: 600;">${c.campaign_name}</div>
+        <span style="font-size: 11px; color: var(--text-3); font-family: var(--mono);">${startDateStr} \u2192 ${endDateStr}</span>
+      </div>
+
+      <!-- Day tracker -->
+      <div class="day-tracker">
+        <div class="day-node"><div class="day-dot ${dot3Class}">3</div><div class="day-label">${day3Date}</div></div>
+        ${lineSegment(0)}
+        <div class="day-node"><div class="day-dot ${dot7Class}">7</div><div class="day-label">${day7Date}</div></div>
+        ${lineSegment(1)}
+        <div class="day-node"><div class="day-dot ${dot14Class}">14</div><div class="day-label">${day14Date}</div></div>
+      </div>
+
+      <div class="day-counter">
+        <span class="day-counter-num">Day ${campaignDay}</span>
+        <span class="day-counter-total">of 14</span>
+      </div>
+
+      <!-- Milestones -->
+      <div class="milestones">
+        ${milestoneTab('Day 3', day3Done, !day3Done && campaignDay < 3, false, day3Note)}
+        ${milestoneTab('Day 7 \u2014 ' + day7Date, day7Done, !day7Done && campaignDay >= 3 && campaignDay < 7, campaignDay < 3, day7Note)}
+        ${milestoneTab('Day 14 \u2014 ' + day14Date, day14Done, !day14Done && campaignDay >= 7, campaignDay < 7, day14Note)}
+      </div>
+
+      <!-- Ad set groups -->
+      ${adsetGroups.map(group => {
+        return `<div class="adset-group">
+          <div class="adset-label">${group.adset_name} \u2014 ${group.ads.length} ad${group.ads.length !== 1 ? 's' : ''}</div>
+          ${group.ads.map(ad => {
+            const adSpend = parseFloat(ad.spend) || 0;
+            const adMsgs = getAdMessages(ad);
+            const adCpr = adMsgs > 0 ? adSpend / adMsgs : null;
+            const adDays = getCampaignDaysSinceLaunch(c.campaign_id, activeCampaigns) || 1;
+            const isUntested = adSpend < 100 && adDays < 7;
+            let verdict;
+            if (isUntested) {
+              verdict = { label: 'Untested', cls: 'verdict--new' };
+            } else if (adCpr == null) {
+              verdict = { label: 'Untested', cls: 'verdict--new' };
+            } else if (adCpr <= 35) {
+              verdict = { label: 'Keep', cls: 'verdict--keep' };
+            } else if (adCpr <= 50) {
+              verdict = { label: 'Watch', cls: 'verdict--watch' };
+            } else {
+              verdict = { label: 'Kill', cls: 'verdict--kill' };
+            }
+
+            return `<div class="wb-ad-card"${isUntested ? ' style="opacity: 0.6;"' : ''}>
+              ${renderThumb(ad)}
+              <div class="wb-ad-info">
+                <div class="wb-ad-name">${ad.ad_name || '--'}</div>
+                <div class="wb-ad-meta">RM${fmt(adSpend)} \u00B7 ${adMsgs} msg${adMsgs !== 1 ? 's' : ''}</div>
+              </div>
+              <div class="wb-ad-stat"><div class="wb-ad-stat-label">CPR</div><div class="wb-ad-stat-value" style="${adCpr != null ? cprColorStyle(adCpr) : ''}">RM ${adCpr != null ? adCpr.toFixed(0) : '\u2014'}</div></div>
+              <span class="verdict ${verdict.cls}">${verdict.label}</span>
+            </div>`;
+          }).join('')}
+        </div>`;
+      }).join('')}
+
+      <!-- Day 14 recommendation panel -->
+      ${day14Done ? renderDay14RecoPanel(c, campaignAds, roasData)
+                  : `<div class="reco-panel">
+                       <div class="reco-title">\u23F3 Day 14 Recommendations \u2014 unlocks ${day14Date}</div>
+                       <div style="font-size: 11px; color: var(--text-3);">Verdicts auto-generated at Day 14. Review and confirm actions here.</div>
+                     </div>`}
+    </div>`;
+  });
+
+  html += '</div>';
+  return html;
+}
+
+// Generate Day 14 recommendations
+function renderDay14RecoPanel(campaign, campaignAds, roasData) {
+  const recos = [];
+
+  campaignAds.forEach(ad => {
+    const adSpend = parseFloat(ad.spend) || 0;
+    const adMsgs = getAdMessages(ad);
+    const adCpr = adMsgs > 0 ? adSpend / adMsgs : null;
+    const adRoasMatch = roasData ? (roasData.ads || []).find(r => r.ad_id === ad.ad_id) : null;
+    const hasCrmOrders = adRoasMatch && adRoasMatch.conversions > 0;
+
+    if (adSpend < 30) {
+      recos.push({
+        type: 'round_next', ad,
+        label: 'Round N+1',
+        text: `${ad.ad_name} \u2014 still untested`,
+        reason: `RM${fmt(adSpend)} spent \u00B7 not enough data`,
+        verdictCls: 'verdict--watch', verdictLabel: 'Round N+1',
+        actionType: 'info',
+      });
+    } else if (adCpr != null && adCpr <= 45 && adMsgs >= 1) {
+      recos.push({
+        type: 'graduate', ad,
+        label: 'Graduate',
+        text: `${ad.ad_name} \u2192 Proving Ground`,
+        reason: `CPR RM${adCpr.toFixed(0)} \u00B7 ${adMsgs} msg${adMsgs !== 1 ? 's' : ''} \u00B7 below RM45 threshold${hasCrmOrders ? ' + ' + adRoasMatch.conversions + ' CRM order(s)' : ''}`,
+        verdictCls: 'verdict--graduate', verdictLabel: 'Graduate',
+        actionType: 'graduate',
+      });
+    } else if (adCpr != null && adCpr > 80 && adSpend >= 100) {
+      const crmWarning = hasCrmOrders ? ` But has ${adRoasMatch.conversions} CRM order${adRoasMatch.conversions !== 1 ? 's' : ''} (RM${fmt(adRoasMatch.attributed_pv)} PV)` : '';
+      recos.push({
+        type: 'kill', ad,
+        label: 'Kill',
+        text: `${ad.ad_name}${ad.adset_name ? ' (ad set: ' + ad.adset_name + ')' : ''}`,
+        reason: `RM${fmt(adSpend)} spent \u00B7 ${adMsgs} msg${adMsgs !== 1 ? 's' : ''} \u00B7 hook dead${crmWarning}`,
+        verdictCls: 'verdict--kill', verdictLabel: hasCrmOrders ? 'Kill?' : 'Kill',
+        actionType: 'kill',
+      });
+    } else if (adCpr != null && adCpr > 50 && adSpend >= 100) {
+      recos.push({
+        type: 'kill', ad,
+        label: 'Kill',
+        text: `${ad.ad_name}`,
+        reason: `CPR RM${adCpr.toFixed(0)} \u00B7 RM${fmt(adSpend)} spent \u00B7 ${adMsgs} msg${adMsgs !== 1 ? 's' : ''}`,
+        verdictCls: 'verdict--kill', verdictLabel: 'Kill',
+        actionType: 'kill',
+      });
+    }
+  });
+
+  if (recos.length === 0) return '';
+
+  const panelId = 'reco-' + campaign.campaign_id;
+  let html = `<div class="reco-panel reco-panel--active" id="${panelId}">
+    <div class="reco-title reco-title--orange">Day 14 Recommendations</div>`;
+
+  recos.forEach((r, i) => {
+    html += `<div class="reco-item">
+      <div class="reco-check" data-reco-idx="${i}" data-reco-type="${r.actionType}" data-ad-id="${r.ad.ad_id || ''}" data-adset-id="${r.ad.adset_id || ''}"></div>
+      <div class="reco-text"><strong>${r.label}</strong> ${r.text}<div class="reco-reason">${r.reason}</div></div>
+      <span class="verdict ${r.verdictCls}">${r.verdictLabel}</span>
+    </div>`;
+  });
+
+  // Budget impact table (hidden by default, shown when graduate actions checked)
+  html += `<div class="wb-budget-impact" style="display: none;">
+    <table class="budget-table">
+      <tr><th>Campaign</th><th>Before</th><th>After</th><th>Change</th></tr>
+    </table>
+  </div>`;
+
+  html += `<div class="reco-actions">
+    <button class="btn btn--sm wb-reco-dismiss">Dismiss</button>
+    <button class="btn btn--primary btn--sm wb-reco-confirm" disabled data-campaign-id="${campaign.campaign_id}">Select actions to confirm</button>
+  </div>`;
+
+  html += '</div>';
+  return html;
+}
+
+// === SECTION 5b: Proving Ground (M) ===
+function renderProvingGroundSection(provingCampaigns, adsByGroup, roasData, activeCampaigns) {
+  let totalBudget = 0;
+  (provingCampaigns || []).forEach(c => { totalBudget += parseFloat(c.campaign_daily_budget || c.daily_budget) || 0; });
+
+  let html = `<div id="proving-section">
+    <div class="section-header" style="margin-top: 0;">
+      <div class="section-dot" style="background: var(--yellow);"></div>
+      <span class="section-label" style="color: var(--yellow);">Proving Ground (M)</span>
+      <div class="section-line"></div>
+      <span class="section-note">RM${fmt(totalBudget)}/d \u00B7 ABO</span>
+    </div>`;
+
+  if (!provingCampaigns || provingCampaigns.length === 0) {
+    html += `<div class="wb-card">
+      <div style="padding: 10px 16px; border-bottom: 1px solid var(--border-light); font-size: 11px; color: var(--text-3);">
+        Each ad gets RM25/day fixed. 7-day validation cycle.
+      </div>
+      <div class="empty-state">Slots available \u2014 graduates from Testing land here</div>
+    </div></div>`;
+    return html;
+  }
+
+  html += `<div class="wb-card">
+    <div style="padding: 10px 16px; border-bottom: 1px solid var(--border-light); font-size: 11px; color: var(--text-3);">
+      Each ad gets RM25/day fixed. 7-day validation cycle.
+    </div>`;
+
+  // Collect all ads from proving ground campaigns
+  let allPgAds = [];
+  provingCampaigns.forEach(c => {
+    const campaignAds = adsByGroup[c.campaign_id] ? adsByGroup[c.campaign_id].ads : [];
+    campaignAds.forEach(ad => {
+      ad._pgCampaignId = c.campaign_id;
+      ad._pgCampaignName = c.campaign_name;
+      allPgAds.push(ad);
+    });
+  });
+
+  allPgAds.forEach(ad => {
+    const adSpend = parseFloat(ad.spend) || 0;
+    const adMsgs = getAdMessages(ad);
+    const adCpr = adMsgs > 0 ? adSpend / adMsgs : null;
+    const adRoas = getAdRoas(ad, roasData);
+    const pgDays = getCampaignDaysSinceLaunch(ad._pgCampaignId, activeCampaigns) || 1;
+    const dayProgress = Math.min(pgDays, 7);
+    const progressPct = (dayProgress / 7) * 100;
+    const barClass = dayProgress < 3 ? 'pg-bar-fill--early' : 'pg-bar-fill--good';
+
+    const thumbHtml = ad.thumbnail_url
+      ? `<div class="pg-thumb"><img src="${ad.thumbnail_url}" alt=""></div>`
+      : `<div class="pg-thumb" style="font-weight: 600;">AD</div>`;
+
+    html += `<div class="pg-card">
+      <div class="pg-top">
+        ${thumbHtml}
+        <div class="pg-info">
+          <div class="pg-name">${ad.ad_name || '--'}</div>
+          <div class="pg-from">Graduated from ${ad._pgCampaignName || 'Testing'}</div>
+        </div>
+        <span class="verdict verdict--validating">Validating</span>
+      </div>
+      <div class="pg-stats">
+        <div><div class="pg-stat-label">Spend</div><div class="pg-stat-value">RM ${fmt(adSpend)}</div></div>
+        <div><div class="pg-stat-label">Conv</div><div class="pg-stat-value">${fmt(adMsgs)}</div></div>
+        <div><div class="pg-stat-label">CPR</div><div class="pg-stat-value" style="${adCpr != null ? cprColorStyle(adCpr) : ''}">RM ${adCpr != null ? adCpr.toFixed(0) : '\u2014'}</div></div>
+        <div><div class="pg-stat-label">ROAS</div><div class="pg-stat-value">${adRoas != null ? adRoas.toFixed(1) + 'x' : '\u2014'}</div></div>
+        <div><div class="pg-stat-label">Budget</div><div class="pg-stat-value">RM25/d</div></div>
+      </div>
+      <div class="pg-progress">
+        <div class="pg-bar-bg"><div class="pg-bar-fill ${barClass}" style="width: ${progressPct.toFixed(0)}%;"></div></div>
+        <div class="pg-days">Day ${dayProgress} / 7</div>
+      </div>
+    </div>`;
+  });
+
+  // Day 7 verdict panel
+  const readyAds = allPgAds.filter(ad => {
+    const pgDays = getCampaignDaysSinceLaunch(ad._pgCampaignId, activeCampaigns) || 1;
+    return pgDays >= 7;
+  });
+
+  html += `<div class="reco-panel" style="margin: 12px 16px 16px;">
+    <div class="reco-title" style="color: var(--yellow);">Day 7 Verdict</div>
+    <div style="font-size: 11px; color: var(--text-3); margin-bottom: 8px;">Per-ad \u2014 unlocks when each ad reaches 7 days.</div>`;
+
+  allPgAds.forEach(ad => {
+    const pgDays = getCampaignDaysSinceLaunch(ad._pgCampaignId, activeCampaigns) || 1;
+    const isReady = pgDays >= 7;
+    const adMsgs = getAdMessages(ad);
+    const adSpend = parseFloat(ad.spend) || 0;
+    const adCpr = adMsgs > 0 ? adSpend / adMsgs : null;
+
+    let verdictText = 'Pending data';
+    if (adCpr != null && adCpr <= 45) verdictText = `CPR \u2264 RM45 \u2192 <strong>Graduate to Proven</strong>`;
+    else if (adCpr != null && adCpr <= 60) verdictText = `CPR RM45-60 \u2192 <strong>Extend 7 more days</strong>`;
+    else if (adCpr != null) verdictText = `CPR > RM60 \u2192 <strong>Kill</strong>`;
+
+    html += `<div class="reco-item"${!isReady ? ' style="opacity: 0.4;"' : ''}>
+      <div class="reco-check"></div>
+      <div class="reco-text">${ad.ad_name}: ${verdictText}
+        <div class="reco-reason">CPR 45-60 \u2192 extend 7d \u00B7 CPR > 60 \u2192 kill</div>
+      </div>
+    </div>`;
+  });
+
+  const unlocksIn = allPgAds.length > 0 ? Math.max(0, 7 - (getCampaignDaysSinceLaunch(allPgAds[0]._pgCampaignId, activeCampaigns) || 1)) : 7;
+  html += `<div class="reco-actions">
+    <button class="btn btn--primary btn--sm"${readyAds.length === 0 ? ' disabled' : ''}>${readyAds.length > 0 ? 'Confirm verdicts' : 'Unlocks in ' + unlocksIn + ' days'}</button>
+  </div>`;
+
+  html += '</div>';
+  html += '<div class="empty-state">Slots available \u2014 graduates from Testing land here</div>';
+  html += '</div></div>';
+  return html;
+}
+
+// === Main loadAdsTab ===
+async function loadAdsTab() {
+  const wb = document.getElementById('adsWorkbench');
+  wb.innerHTML = '<div class="loading">Loading ads data\u2026</div>';
+
+  try {
+    // Build date range params
+    let dateParams = `month=${selectedMonth}`;
+    const range = typeof adsTimeRange !== 'undefined' ? adsTimeRange : 'mtd';
+    let since, until;
+    if (range !== 'mtd') {
+      const today = new Date();
+      until = today.toISOString().split('T')[0];
+      const daysBack = range === '7d' ? 7 : range === '14d' ? 14 : 30;
+      const sinceDate = new Date(today.getTime() - daysBack * 86400000);
+      since = sinceDate.toISOString().split('T')[0];
+      dateParams = `since=${since}&until=${until}`;
+    } else {
+      // MTD: compute since/until for ROAS call
+      const [y, m] = selectedMonth.split('-').map(Number);
+      since = `${y}-${String(m).padStart(2, '0')}-01`;
+      until = new Date().toISOString().split('T')[0];
+    }
+
+    // Fetch 5 parallel API calls
+    const [campaignData, msgAdsData, peAdsData, activeCampaignsData, roasData] = await Promise.all([
       apiSafe(`/meta/campaign-insights?${dateParams}`),
       apiSafe(`/meta/ad-insights?${dateParams}&objective=REPLIES`),
       apiSafe(`/meta/ad-insights?${dateParams}&objective=POST_ENGAGEMENT`),
+      apiSafe(`/meta/active-campaigns`),
+      apiSafe(`/meta/campaign-roas?since=${since}&until=${until}`),
     ]);
 
-    // Combine all campaigns from all objectives
+    // Combine all campaigns
     let allCampaigns = [];
     if (campaignData && campaignData.groups) {
       Object.values(campaignData.groups).forEach(obj => {
@@ -3326,67 +3721,216 @@ async function loadAdsTab() {
       });
     }
 
-    // Combine all ads — unwrap from { ads: [...] } response shape
-    const msgAdsList = (msgAds && msgAds.ads) ? msgAds.ads : (Array.isArray(msgAds) ? msgAds : []);
-    const peAdsList = (peAds && peAds.ads) ? peAds.ads : (Array.isArray(peAds) ? peAds : []);
+    // Unwrap ads
+    const msgAdsList = (msgAdsData && msgAdsData.ads) ? msgAdsData.ads : (Array.isArray(msgAdsData) ? msgAdsData : []);
+    const peAdsList = (peAdsData && peAdsData.ads) ? peAdsData.ads : (Array.isArray(peAdsData) ? peAdsData : []);
     const allAds = [].concat(msgAdsList, peAdsList);
+    const activeCampaigns = (activeCampaignsData && activeCampaignsData.campaigns) ? activeCampaignsData.campaigns : (Array.isArray(activeCampaignsData) ? activeCampaignsData : []);
+
+    // Build campaign meta lookup
+    const campaignMetaMap = {};
+    activeCampaigns.forEach(c => { campaignMetaMap[c.campaign_id] = c; });
 
     // Group ads by campaign
     const adsByGroup = groupAdsByCampaign(allAds);
 
-    // Classify campaigns
-    const testCampaigns = [];
-    const convCampaigns = [];
-    const brandCampaigns = [];
+    // Classify campaigns using new 5-tier logic
+    const groups = { testing: [], proving: [], proven: [], branding: [], seasonal: [] };
 
     allCampaigns.forEach(c => {
-      const type = classifyCampaign(c.campaign_name);
-      if (type === 'test') testCampaigns.push(c);
-      else if (type === 'branding') brandCampaigns.push(c);
-      else convCampaigns.push(c);
+      const meta = campaignMetaMap[c.campaign_id] || null;
+      const type = classifyCampaign(c.campaign_name, meta);
+      if (groups[type]) groups[type].push(c);
+      else groups.proven.push(c); // fallback
     });
 
-    // Sort by spend descending
+    // Sort each group by spend descending
     const bySpend = (a, b) => (parseFloat(b.spend) || 0) - (parseFloat(a.spend) || 0);
-    testCampaigns.sort(bySpend);
-    convCampaigns.sort(bySpend);
-    brandCampaigns.sort(bySpend);
+    Object.values(groups).forEach(arr => arr.sort(bySpend));
 
-    // Calculate days in range for daily budget
-    const [y, m] = selectedMonth.split('-').map(Number);
-    const daysInMonth = new Date(y, m, 0).getDate();
-    const now = new Date();
-    const isCurrentMonth = now.getFullYear() === y && (now.getMonth() + 1) === m;
-    const daysElapsed = isCurrentMonth ? now.getDate() : daysInMonth;
-
-    // Render overview KPIs (pass allAds for message/CPR aggregation since campaign-insights lacks these)
-    renderAdsOverviewKpis(allCampaigns, daysElapsed, allAds);
-
-    // Update cache note
-    const cacheNote = document.getElementById('adsCacheNote');
-    cacheNote.textContent = `Data cached 24hrs. Last updated: ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
-
-    // Render sections
-    renderTestSection(testCampaigns, adsByGroup);
-    renderConversionSection(convCampaigns, adsByGroup);
-    renderBrandingSection(brandCampaigns, adsByGroup);
-
-    // Attach campaign expand/collapse click handlers via event delegation
-    content.querySelectorAll('.campaign-header').forEach(header => {
-      header.addEventListener('click', () => {
-        header.closest('.campaign-row').classList.toggle('expanded');
-      });
+    // Attach ads to campaigns for funnel bar calculation
+    allCampaigns.forEach(c => {
+      c._ads = adsByGroup[c.campaign_id] ? adsByGroup[c.campaign_id].ads : [];
     });
 
-    loading.style.display = 'none';
-    content.style.display = 'block';
+    // Build date display for pills
+    const sinceDate = since ? new Date(since) : null;
+    const untilDate = until ? new Date(until) : null;
+    const dateDisplay = sinceDate && untilDate
+      ? `${formatDateShort(sinceDate)} \u2013 ${formatDateShort(untilDate)}`
+      : '';
+
+    // Render all sections
+    let html = '';
+
+    // 1. KPI Bar
+    html += renderKpiBar(msgAdsList, peAdsList, roasData, activeCampaigns);
+
+    // Time pills
+    html += `<div class="wb-time-pills" id="wbTimePills">
+      <div class="time-pill${range === '7d' ? ' active' : ''}" data-range="7d">7d</div>
+      <div class="time-pill${range === '14d' ? ' active' : ''}" data-range="14d">14d</div>
+      <div class="time-pill${range === '30d' ? ' active' : ''}" data-range="30d">30d</div>
+      <div class="time-pill${range === 'mtd' ? ' active' : ''}" data-range="mtd">MTD</div>
+      ${dateDisplay ? '<span class="pill-sep">|</span><span class="pill-date">' + dateDisplay + '</span>' : ''}
+    </div>`;
+
+    // 2. Funnel bar
+    html += renderFunnelBar(groups);
+
+    // 3. Seasonal (full width, only if campaigns exist)
+    html += renderSeasonalSection(groups.seasonal, adsByGroup, roasData, activeCampaigns);
+
+    // 4. Branding + Proven (side by side)
+    html += `<div class="wb-two-col" style="margin-top: 32px;">
+      ${renderBrandingSectionWb(groups.branding, adsByGroup)}
+      ${renderProvenSection(groups.proven, adsByGroup, roasData)}
+    </div>`;
+
+    // 5. Testing + Proving Ground (side by side)
+    html += `<div class="wb-two-col" style="margin-top: 32px;">
+      ${renderTestingSection(groups.testing, adsByGroup, roasData, activeCampaigns)}
+      ${renderProvingGroundSection(groups.proving, adsByGroup, roasData, activeCampaigns)}
+    </div>`;
+
+    wb.innerHTML = html;
+
+    // Wire up event handlers
+    wireAdsWorkbenchEvents(wb);
+
     tabDataLoaded.ads = selectedMonth;
 
   } catch (e) {
-    loading.textContent = 'Error loading ads data: ' + e.message;
-    loading.className = 'error-msg';
+    wb.innerHTML = '<div class="error-msg">Error loading ads data: ' + e.message + '</div>';
     console.error('Ads tab error:', e);
   }
+}
+
+function wireAdsWorkbenchEvents(wb) {
+  // Time pills
+  wb.querySelectorAll('#wbTimePills .time-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      wb.querySelectorAll('#wbTimePills .time-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      adsTimeRange = pill.dataset.range;
+      tabDataLoaded.ads = null;
+      loadTabData();
+    });
+  });
+
+  // Seasonal collapsible toggle
+  wb.querySelectorAll('.seasonal-head').forEach(head => {
+    head.addEventListener('click', () => {
+      const targetId = head.dataset.toggle;
+      if (!targetId) return;
+      const body = document.getElementById(targetId);
+      if (body) {
+        body.classList.toggle('open');
+        const chev = head.querySelector('.chevron');
+        if (chev) chev.style.transform = body.classList.contains('open') ? 'rotate(90deg)' : '';
+      }
+    });
+  });
+
+  // Proven campaign expand/collapse
+  wb.querySelectorAll('.wb-campaign-head').forEach(head => {
+    head.addEventListener('click', () => {
+      head.closest('.wb-campaign-row').classList.toggle('expanded');
+    });
+  });
+
+  // Funnel tier click -> scroll to section
+  wb.querySelectorAll('.funnel-tier').forEach(tier => {
+    tier.addEventListener('click', () => {
+      const target = tier.dataset.scrollTo;
+      if (target) {
+        const el = document.getElementById(target);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // Reco checkboxes
+  wb.querySelectorAll('.reco-check').forEach(check => {
+    check.addEventListener('click', () => {
+      check.classList.toggle('checked');
+      const panel = check.closest('.reco-panel');
+      if (!panel) return;
+      const allChecks = panel.querySelectorAll('.reco-check');
+      const checkedCount = panel.querySelectorAll('.reco-check.checked').length;
+      const confirmBtn = panel.querySelector('.wb-reco-confirm');
+      if (confirmBtn) {
+        if (checkedCount > 0) {
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = `Confirm ${checkedCount} of ${allChecks.length} actions`;
+        } else {
+          confirmBtn.disabled = true;
+          confirmBtn.textContent = 'Select actions to confirm';
+        }
+      }
+
+      // Show/hide budget table if graduate actions checked
+      const hasGraduate = Array.from(panel.querySelectorAll('.reco-item')).some(item => {
+        return item.querySelector('.verdict--graduate') && item.querySelector('.reco-check.checked');
+      });
+      const budgetSection = panel.querySelector('.wb-budget-impact');
+      if (budgetSection) budgetSection.style.display = hasGraduate ? 'block' : 'none';
+    });
+  });
+
+  // Confirm button
+  wb.querySelectorAll('.wb-reco-confirm').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const panel = btn.closest('.reco-panel');
+      if (!panel) return;
+      const checkedItems = panel.querySelectorAll('.reco-check.checked');
+      if (checkedItems.length === 0) return;
+
+      const actions = [];
+      checkedItems.forEach(check => {
+        const item = check.closest('.reco-item');
+        const type = check.dataset.recoType;
+        const adId = check.dataset.adId;
+        const text = item ? item.querySelector('.reco-text') : null;
+        const reason = text ? text.textContent.trim().substring(0, 200) : '';
+
+        if (type === 'graduate') {
+          actions.push({ type: 'graduate', ad_id: adId, from_campaign: btn.dataset.campaignId, to_campaign: 'Proving Ground', reason });
+        } else if (type === 'kill') {
+          actions.push({ type: 'pause', target_type: 'ad', target_id: adId, reason });
+        }
+      });
+
+      if (actions.length === 0) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Executing...';
+
+      try {
+        await api('/meta/actions', {
+          method: 'POST',
+          body: JSON.stringify({ actions }),
+        });
+        btn.textContent = 'Done! Refreshing...';
+        setTimeout(() => {
+          tabDataLoaded.ads = null;
+          loadTabData();
+        }, 1500);
+      } catch (e) {
+        btn.textContent = 'Error: ' + e.message;
+        btn.disabled = false;
+        console.error('Action execution error:', e);
+      }
+    });
+  });
+
+  // Dismiss button
+  wb.querySelectorAll('.wb-reco-dismiss').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = btn.closest('.reco-panel');
+      if (panel) panel.style.display = 'none';
+    });
+  });
 }
 
 // ===== CAMPAIGNS TAB =====
@@ -3539,28 +4083,10 @@ async function loadCampaignsTab() {
   tabDataLoaded.campaigns = selectedMonth;
 }
 
-// Ads tab event listeners — called once after DOM ready
+// Ads tab event listeners — now wired inside wireAdsWorkbenchEvents() after render
 function initAdsTabListeners() {
-  // Time pills
-  document.querySelectorAll('#adsTimePills .time-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-      document.querySelectorAll('#adsTimePills .time-pill').forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-      adsTimeRange = pill.dataset.range;
-      // Re-fetch with new range (for now, all ranges use the month selector)
-      tabDataLoaded.ads = null;
-      loadTabData();
-    });
-  });
-
-  // Ads refresh button (bypass cache)
-  const adsRefresh = document.getElementById('adsRefreshBtn');
-  if (adsRefresh) {
-    adsRefresh.addEventListener('click', () => {
-      tabDataLoaded.ads = null;
-      loadTabData();
-    });
-  }
+  // No-op: all event binding happens inside wireAdsWorkbenchEvents()
+  // after the workbench DOM is built by loadAdsTab()
 }
 
 // ===== BOOT =====
