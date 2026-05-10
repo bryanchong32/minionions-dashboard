@@ -3090,8 +3090,8 @@ function renderKpiBar(allAds, peAds, roasData, activeCampaigns) {
     }
   });
 
-  // API may return cents or RM — heuristic: if >1000, likely cents
-  const budgetRM = dailyBudget > 1000 ? dailyBudget / 100 : dailyBudget;
+  // Budget is already in RM (backend divides by 100)
+  const budgetRM = dailyBudget;
   const capWarning = budgetRM > 1050;
 
   return `<div class="wb-kpi-bar">
@@ -3463,8 +3463,10 @@ function renderTestingSection(testCampaigns, adsByGroup, roasData, activeCampaig
 
     // Day calculation: for Testing, round start = newest active ad-set creation time
     const meta = (activeCampaigns || []).find(m => String(m.campaign_id) === String(c.campaign_id));
+    // Use ALL ad sets (including paused) — the newest ad set marks when the round was configured
+    // e.g. Cherry Picks (Round 2) was created May 6 even though it's now paused
     const adsetDates = campaignAds
-      .filter(a => a.adset_created_time && a.effective_status === 'ACTIVE')
+      .filter(a => a.adset_created_time)
       .map(a => new Date(a.adset_created_time).getTime());
     const roundStart = adsetDates.length > 0 ? new Date(Math.max(...adsetDates)) : null;
     const campaignDay = roundStart
