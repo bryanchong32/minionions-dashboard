@@ -1582,7 +1582,7 @@ function renderEngCard(eng, isNext, isArchived) {
       <div class="camp-eng-card__date">${dateStr}</div>
       <div class="camp-eng-card__title">${eng.id.toUpperCase()} · ${escHtml(eng.touchpoint)}${cancelBadge}</div>
       <div class="camp-eng-card__meta">${segNames}${exclNote}</div>
-      ${eng.reasoning || eng.captions ? '<div class="camp-eng-expand hidden" style="margin-top:8px;">' + renderEngDetails(eng, isArchived) + '</div>' : ''}
+      <div class="camp-eng-expand hidden" style="margin-top:8px;">${renderEngDetails(eng, isArchived)}</div>
     </div>`;
   }
 
@@ -1591,7 +1591,7 @@ function renderEngCard(eng, isNext, isArchived) {
     return `<div class="camp-eng-card camp-eng-card--future" onclick="this.querySelector('.camp-eng-expand')?.classList.toggle('hidden')">
       <div class="camp-eng-card__date">${dateStr}</div>
       <div class="camp-eng-card__title">${eng.id.toUpperCase()} · ${escHtml(eng.touchpoint)}</div>
-      ${eng.reasoning || eng.captions ? '<div class="camp-eng-expand hidden" style="margin-top:8px;">' + renderEngDetails(eng, isArchived) + '</div>' : ''}
+      <div class="camp-eng-expand hidden" style="margin-top:8px;">${renderEngDetails(eng, isArchived)}</div>
     </div>`;
   }
 
@@ -1686,6 +1686,11 @@ function renderEngDetails(eng, isArchived) {
         <div style="font-size:10px; color:var(--text-3); font-style:italic;">Lists not generated yet</div>
       </div>`;
     }
+  }
+
+  // Engagement notes (from campaign state)
+  if (eng.notes) {
+    html += `<div style="margin-top:6px; font-size:10px; color:var(--text-3); line-height:1.5;">${escHtml(eng.notes)}</div>`;
   }
 
   // Note input for this engagement
