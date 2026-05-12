@@ -1859,7 +1859,7 @@ function renderPlaybook(schedule, isArchived) {
         colHtml += `<div class="${nodeCls}" style="${nodeStyle}"></div>`;
 
         // Store caption state
-        if (eng.captions) {
+        if (eng.captions && Object.keys(eng.captions).length > 0) {
           const segs = Object.keys(eng.captions);
           captionState[eng.id] = { segment: segs[0], captions: eng.captions, currentText: eng.captions[segs[0]][0] || '' };
         }
