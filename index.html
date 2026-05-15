@@ -2896,17 +2896,12 @@ function renderThumb(ad) {
 }
 
 function getAdMessages(ad) {
-  // Prefer flat fields, then check actions array for messaging_first_reply
-  const fr = parseInt(ad.first_replies, 10) || 0;
-  const nl = parseInt(ad.new_leads, 10) || 0;
+  // Use conversations_started (messaging_conversation_started_7d) — matches Ads Manager "Results"
   const cs = parseInt(ad.conversations_started, 10) || 0;
-  const flat = Math.max(fr, nl, cs);
-  if (flat > 0) return flat;
-  // Fallback: parse actions array (Meta returns [{action_type, value}])
+  if (cs > 0) return cs;
+  // Fallback: parse actions array
   if (Array.isArray(ad.actions)) {
-    const act = ad.actions.find(a => a.action_type === 'onsite_conversion.messaging_first_reply'
-      || a.action_type === 'messaging_first_reply'
-      || a.action_type === 'onsite_conversion.messaging_conversation_started_7d');
+    const act = ad.actions.find(a => a.action_type === 'onsite_conversion.messaging_conversation_started_7d');
     if (act) return parseInt(act.value, 10) || 0;
   }
   return 0;
@@ -2918,20 +2913,13 @@ function getAdCpr(ad) {
 }
 
 function getCampaignMessages(c) {
-  // Try flat fields first (ad-level data)
-  const fr = parseInt(c.first_replies, 10) || 0;
-  const nl = parseInt(c.new_leads, 10) || 0;
+  // Use conversations_started (messaging_conversation_started_7d) — matches Ads Manager "Results"
   const cs = parseInt(c.conversations_started, 10) || 0;
-  const flat = Math.max(fr, nl, cs);
-  if (flat > 0) return flat;
-  // Then try actions (may be array [{action_type, value}] or object)
+  if (cs > 0) return cs;
+  // Fallback: parse actions array
   if (Array.isArray(c.actions)) {
-    const act = c.actions.find(a => a.action_type === 'onsite_conversion.messaging_first_reply'
-      || a.action_type === 'messaging_first_reply'
-      || a.action_type === 'onsite_conversion.messaging_conversation_started_7d');
+    const act = c.actions.find(a => a.action_type === 'onsite_conversion.messaging_conversation_started_7d');
     if (act) return parseInt(act.value, 10) || 0;
-  } else if (c.actions) {
-    return c.actions.messaging_first_reply || c.actions.onsite_conversion_messaging_first_reply || 0;
   }
   // Fall back to campaign-level data: sum from attached ads
   if (c._ads && c._ads.length > 0) {
